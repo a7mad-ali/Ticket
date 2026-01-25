@@ -1,6 +1,6 @@
-
 using Microsoft.EntityFrameworkCore;
 using Ticket.Infrastructure.Data;
+using Ticket.Presentation.DependencyInjection;
 
 namespace Ticket.Presentation
 {
@@ -11,26 +11,25 @@ namespace Ticket.Presentation
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
-
             builder.Services.AddControllers();
-            builder.Services.AddDbContext<TicketDbContext>(options =>
-                         options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
+            builder.Services.AddApplicationDependencies(builder.Configuration);
 
-            // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-            builder.Services.AddOpenApi();
+            // Use built-in OpenAPI support for .NET 10
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSwaggerGen();
 
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
-                app.MapOpenApi();
+                app.UseSwagger();
+                app.UseSwaggerUI();
             }
 
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
-
 
             app.MapControllers();
 
