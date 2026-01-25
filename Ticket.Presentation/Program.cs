@@ -1,4 +1,7 @@
 
+using Microsoft.EntityFrameworkCore;
+using Ticket.Infrastructure.Data;
+
 namespace Ticket.Presentation
 {
     public class Program
@@ -10,6 +13,9 @@ namespace Ticket.Presentation
             // Add services to the container.
 
             builder.Services.AddControllers();
+            builder.Services.AddDbContext<TicketDbContext>(options =>
+                         options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
+
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
 
