@@ -4,9 +4,9 @@ using Ticket.Domain.Entities;
 
 namespace Ticket.Infrastructure.Data.Configurations
 {
-    public class EmployeeDirectoryEntryConfiguration : IEntityTypeConfiguration<EmployeeDirectoryEntry>
+    public class EmployeeEntryConfiguration : IEntityTypeConfiguration<EmployeeEntry>
     {
-        public void Configure(EntityTypeBuilder<EmployeeDirectoryEntry> builder)
+        public void Configure(EntityTypeBuilder<EmployeeEntry> builder)
         {
             builder.ToTable("EmployeeDirectory");
 
@@ -25,8 +25,7 @@ namespace Ticket.Infrastructure.Data.Configurations
                 .HasMaxLength(200);
 
             builder.Property(entry => entry.Email)
-                .IsRequired()
-                .HasMaxLength(200);
+              .HasMaxLength(200);
 
             builder.Property(entry => entry.Phone)
                 .HasMaxLength(50);
