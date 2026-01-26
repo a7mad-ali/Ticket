@@ -101,11 +101,6 @@ namespace Ticket.Infrastructure.Services
                     throw new InvalidOperationException("Employee record does not match provided identifiers.");
                 }
 
-                if (!string.Equals(directoryEntry.Email, dto.Email, StringComparison.OrdinalIgnoreCase))
-                {
-                    throw new InvalidOperationException("Email does not match employee record.");
-                }
-
                 var existingEmail = await _userRepository.GetByEmailAsync(dto.Email);
                 if (existingEmail is not null)
                 {
