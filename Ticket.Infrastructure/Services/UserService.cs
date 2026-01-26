@@ -1,6 +1,6 @@
 using System;
 using System.Threading.Tasks;
-using Ticket.Domain.Interfaces.IRepository;
+using Ticket.Domain.Contracts.Interfaces.IRepository;
 
 namespace Ticket.Infrastructure.Services
 {

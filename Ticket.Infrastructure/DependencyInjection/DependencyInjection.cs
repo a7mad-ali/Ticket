@@ -1,10 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Ticket.Domain.Interfaces.IRepository;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Ticket.Domain.Contracts.Interfaces.IRepository;
 using Ticket.Infrastructure.Data;
 using Ticket.Infrastructure.Repositories;
 using Ticket.Infrastructure.Services;
 
-namespace Ticket.Presentation.DependencyInjection
+namespace Ticket.Infrastructure.DependencyInjection
 {
     public static class DependencyInjection
     {

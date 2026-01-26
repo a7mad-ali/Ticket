@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Ticket.Domain.Interfaces.IRepository;
+using Ticket.Domain.Contracts.Interfaces.IRepository;
 using Ticket.Infrastructure.Data;
 
 namespace Ticket.Infrastructure.Repositories

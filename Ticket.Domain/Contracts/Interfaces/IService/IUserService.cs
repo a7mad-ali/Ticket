@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Ticket.Presentation.IService
+namespace Ticket.Domain.Contracts.Interfaces.IService
 {
     public interface IUserService
     {

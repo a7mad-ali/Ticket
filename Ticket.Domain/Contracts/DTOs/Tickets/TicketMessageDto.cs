@@ -1,4 +1,4 @@
-﻿namespace Ticket.Presentation.DTOs.Tickets
+﻿namespace Ticket.Domain.Contracts.DTOs.Tickets
 {
     public record TicketMessageDto(
      Guid MessageId,

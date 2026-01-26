@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Ticket.Domain.Contracts.Interfaces.IRepository;
 using Ticket.Domain.Entities;
-using Ticket.Domain.Interfaces.IRepository;
 using Ticket.Infrastructure.Data;
 
 namespace Ticket.Infrastructure.Repositories

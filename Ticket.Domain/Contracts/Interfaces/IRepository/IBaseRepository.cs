@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Ticket.Domain.Interfaces.IRepository
+namespace Ticket.Domain.Contracts.Interfaces.IRepository
 {
     public  interface IBaseRepository<T> where T : class
     {

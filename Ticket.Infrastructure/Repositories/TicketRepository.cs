@@ -2,8 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Ticket.Domain.Contracts.Interfaces.IRepository;
 using Ticket.Domain.Entities;
-using Ticket.Domain.Interfaces.IRepository;
 using Ticket.Infrastructure.Data;
 
 namespace Ticket.Infrastructure.Repositories
@@ -21,5 +21,13 @@ namespace Ticket.Infrastructure.Repositories
                 .Include(t => t.Messages)
                 .FirstOrDefaultAsync(t => t.Id == ticketId);
         }
+
+        public async Task<IReadOnlyList<SupportTicket>> GetTicketsByUserIdAsync(Guid userId)
+        {
+            return await _context.Tickets
+                .Where(t => t.Id == userId)
+                .ToListAsync();
+        }
+
     }
 }

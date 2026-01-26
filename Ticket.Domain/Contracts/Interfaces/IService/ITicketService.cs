@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Ticket.Domain.Entities;
-using Ticket.Presentation.DTOs.Tickets;
+using Ticket.Domain.Contracts.DTOs.Tickets;
 
 
-namespace Ticket.Presentation.IService
+namespace Ticket.Domain.Contracts.Interfaces.IService
 {
     public interface ITicketService
     {
