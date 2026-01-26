@@ -25,7 +25,8 @@ namespace Ticket.Infrastructure.Repositories
         public async Task<IReadOnlyList<SupportTicket>> GetTicketsByUserIdAsync(Guid userId)
         {
             return await _context.Tickets
-                .Where(t => t.Id == userId)
+                .Include(t => t.Messages)
+                .Where(t => t.CreatedByUserId == userId)
                 .ToListAsync();
         }
 
