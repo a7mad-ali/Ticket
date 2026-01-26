@@ -26,6 +26,10 @@ namespace Ticket.Infrastructure.Data.Configurations
             builder.Property(x => x.Email).HasMaxLength(200).IsRequired();
             builder.Property(x => x.Phone).HasMaxLength(30).IsRequired();
 
+            builder.Property(x => x.EmailVerificationCode)
+                .HasMaxLength(20);
+            builder.Property(x => x.EmailVerificationCodeExpiresAtUtc);
+
             builder.Property(x => x.CreatedAtUtc).IsRequired();
         }
     }
