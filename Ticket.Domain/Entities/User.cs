@@ -17,6 +17,8 @@ namespace Ticket.Domain.Entities
 
         public string Email { get; set; } = null!;
         public bool IsEmailVerified { get; set; }
+        public string? EmailVerificationCode { get; set; }
+        public DateTime? EmailVerificationCodeExpiresAtUtc { get; set; }
 
         public string Phone { get; set; } = null!;
         public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;

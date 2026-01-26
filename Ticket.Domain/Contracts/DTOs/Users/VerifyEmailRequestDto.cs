@@ -1,7 +1,7 @@
 ﻿namespace Ticket.Domain.Contracts.DTOs.Users
 {
-    public record VerifyEmailRequestDto(
+public record VerifyEmailRequestDto(
         string Email,
-        string Code
+        string VerificationCode
     );
 }
