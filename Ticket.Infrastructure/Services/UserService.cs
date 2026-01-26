@@ -122,7 +122,7 @@ namespace Ticket.Infrastructure.Services
                 var user = _mapper.Map<User>(dto);
                 user.IsEmailVerified = false;
                 user.EmailVerificationCode = GenerateVerificationCode();
-                user.EmailVerificationCodeExpiresAtUtc = DateTime.UtcNow.AddHours(1);
+                user.EmailVerificationCodeExpiresAtUtc = DateTime.UtcNow.AddHours(10);
                 user.CreatedAtUtc = DateTime.UtcNow;
 
                 await _userRepository.AddAsync(user);
