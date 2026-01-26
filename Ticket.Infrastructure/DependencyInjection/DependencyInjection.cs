@@ -24,12 +24,15 @@ namespace Ticket.Infrastructure.DependencyInjection
                 options.UseSqlServer(
                     configuration.GetConnectionString("EmployeeDirectory")));
 
+            services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
+
             // Repositories
             services.AddScoped<IEmployeeRepository, EmployeeRepository>();
             services.AddScoped<ITicketRepository, TicketRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
 
             // Services
+            services.AddScoped<IEmailSender, SmtpEmailSender>();
             services.AddScoped<ITicketService, TicketService>();
             services.AddScoped<IUserService, UserService>();
 

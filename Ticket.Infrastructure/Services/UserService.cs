@@ -1,6 +1,9 @@
 using AutoMapper;
 using System;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
 using Ticket.Domain.Contracts.DTOs.Users;
 using Ticket.Domain.Contracts.Interfaces.IRepository;
 using Ticket.Domain.Contracts.Interfaces.IService;
@@ -13,15 +16,21 @@ namespace Ticket.Infrastructure.Services
     {
         private readonly IEmployeeRepository _employeeRepository;
         private readonly IUserRepository _userRepository;
+        private readonly IEmailSender _emailSender;
+        private readonly EmailOptions _emailOptions;
         private readonly IMapper _mapper;
 
         public UserService(
             IEmployeeRepository employeeRepository,
             IUserRepository userRepository,
+            IEmailSender emailSender,
+            IOptions<EmailOptions> emailOptions,
             IMapper mapper)
         {
             _employeeRepository = employeeRepository;
             _userRepository = userRepository;
+            _emailSender = emailSender;
+            _emailOptions = emailOptions.Value;
             _mapper = mapper;
         }
 
@@ -92,7 +101,10 @@ namespace Ticket.Infrastructure.Services
                     throw new InvalidOperationException("Employee record does not match provided identifiers.");
                 }
 
-              
+                if (!string.Equals(directoryEntry.Email, dto.Email, StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new InvalidOperationException("Email does not match employee record.");
+                }
 
                 var existingEmail = await _userRepository.GetByEmailAsync(dto.Email);
                 if (existingEmail is not null)
@@ -114,10 +126,14 @@ namespace Ticket.Infrastructure.Services
 
                 var user = _mapper.Map<User>(dto);
                 user.IsEmailVerified = false;
+                user.EmailVerificationCode = GenerateVerificationCode();
+                user.EmailVerificationCodeExpiresAtUtc = DateTime.UtcNow.AddHours(1);
                 user.CreatedAtUtc = DateTime.UtcNow;
 
                 await _userRepository.AddAsync(user);
                 await _userRepository.SaveChangesAsync();
+
+                await SendVerificationEmailAsync(user);
 
                 return new RegisterUserResponseDto(user.Id, user.Email);
             }
@@ -141,7 +157,21 @@ namespace Ticket.Infrastructure.Services
                     return new VerifyEmailResponseDto(false);
                 }
 
+                if (string.IsNullOrWhiteSpace(user.EmailVerificationCode)
+                    || user.EmailVerificationCodeExpiresAtUtc is null
+                    || user.EmailVerificationCodeExpiresAtUtc < DateTime.UtcNow)
+                {
+                    return new VerifyEmailResponseDto(false);
+                }
+
+                if (!string.Equals(user.EmailVerificationCode, dto.VerificationCode, StringComparison.OrdinalIgnoreCase))
+                {
+                    return new VerifyEmailResponseDto(false);
+                }
+
                 user.IsEmailVerified = true;
+                user.EmailVerificationCode = null;
+                user.EmailVerificationCodeExpiresAtUtc = null;
                 _userRepository.Update(user);
                 await _userRepository.SaveChangesAsync();
 
@@ -151,6 +181,33 @@ namespace Ticket.Infrastructure.Services
             {
                 throw new InvalidOperationException("Unable to verify email.", ex);
             }
+        }
+
+        private async Task SendVerificationEmailAsync(User user)
+        {
+            if (string.IsNullOrWhiteSpace(_emailOptions.VerificationBaseUrl))
+            {
+                return;
+            }
+
+            var verificationLink =
+                $"{_emailOptions.VerificationBaseUrl}?email={Uri.EscapeDataString(user.Email)}&code={Uri.EscapeDataString(user.EmailVerificationCode ?? string.Empty)}";
+            var subject = "Verify your email";
+            var body = new StringBuilder()
+                .Append("<p>Please verify your email by clicking the link below:</p>")
+                .Append($"<p><a href=\"{verificationLink}\">Verify Email</a></p>")
+                .Append("<p>If you did not request this, please ignore this email.</p>")
+                .ToString();
+
+            await _emailSender.SendEmailAsync(user.Email, subject, body);
+        }
+
+        private static string GenerateVerificationCode()
+        {
+            Span<byte> data = stackalloc byte[4];
+            RandomNumberGenerator.Fill(data);
+            var value = BitConverter.ToUInt32(data);
+            return (value % 1_000_000).ToString("D6");
         }
     }
 }
