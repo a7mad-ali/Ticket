@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Ticket.Infrastructure.Data;
-using Ticket.Presentation.DependencyInjection;
+using Ticket.Infrastructure.DependencyInjection;
 
 namespace Ticket.Presentation
 {
