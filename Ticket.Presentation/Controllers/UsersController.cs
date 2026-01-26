@@ -42,7 +42,7 @@ namespace Ticket.Presentation.Controllers
             var response = await _userService.VerifyEmailAsync(dto);
             if (!response.Verified)
             {
-                return NotFound(new { message = "User not found." });
+                return BadRequest(new { message = "Invalid or expired verification code." });
             }
 
             return Ok(response);
