@@ -26,14 +26,14 @@ namespace Ticket.Infrastructure.Services
             _mapper = mapper;
         }
 
-        public async Task AddMessageAsync(Guid ticketId, AddMessageRequestDto dto)
+        public async Task AddMessageAsync(AddMessageRequestDto dto)
         {
             try
             {
-                var ticket = await _ticketRepository.GetTicketWithMessagesAsync(ticketId);
+                var ticket = await _ticketRepository.GetTicketWithMessagesAsync(dto.TicketId);
                 if (ticket is null)
                 {
-                    throw new KeyNotFoundException($"Ticket {ticketId} not found.");
+                    throw new KeyNotFoundException($"Ticket {dto.TicketId} not found.");
                 }
 
                 var sender = await _userRepository.GetByIdAsync(dto.SenderUserId);

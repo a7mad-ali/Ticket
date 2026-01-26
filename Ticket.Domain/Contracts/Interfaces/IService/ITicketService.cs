@@ -11,7 +11,7 @@ namespace Ticket.Domain.Contracts.Interfaces.IService
     public interface ITicketService
     {
         Task<TicketCreatedResponseDto> CreateTicketAsync(CreateTicketRequestDto dto);
-        Task AddMessageAsync(Guid ticketId, AddMessageRequestDto dto);
+        Task AddMessageAsync(AddMessageRequestDto dto);
         Task<TicketDetailsDto> GetTicketAsync(Guid ticketId);
         Task<IReadOnlyList<TicketDetailsDto>> GetMyTicketsAsync(Guid userId);
     }

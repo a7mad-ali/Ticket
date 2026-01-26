@@ -30,11 +30,11 @@ namespace Ticket.Presentation.Controllers
         }
 
         [HttpPost("{ticketId:guid}/messages")]
-        public async Task<IActionResult> AddMessage(Guid ticketId, AddMessageRequestDto dto)
+        public async Task<ActionResult<TicketMessageDto>> AddMessage(AddMessageRequestDto dto)
         {
             try
             {
-                await _ticketService.AddMessageAsync(ticketId, dto);
+                await _ticketService.AddMessageAsync( dto);
                 return NoContent();
             }
             catch (KeyNotFoundException ex)

@@ -15,17 +15,20 @@ namespace Ticket.Infrastructure.Repositories
 
         public async Task<User?> GetByEmailAsync(string email)
         {
-            return await _context.users.FirstOrDefaultAsync(u => u.Email == email);
+            return await _context.users
+                .FirstOrDefaultAsync(u => u.Email == email);
         }
 
         public async Task<User?> GetByEmployeeCodeAsync(string employeeCode)
         {
-            return await _context.users.FirstOrDefaultAsync(u => u.EmployeeCode == employeeCode);
+            return await _context.users
+                .FirstOrDefaultAsync(u => u.EmployeeCode == employeeCode);
         }
 
         public async Task<User?> GetByNationalIdAsync(string nationalId)
         {
-            return await _context.users.FirstOrDefaultAsync(u => u.NationalId == nationalId);
+            return await _context.users
+                .FirstOrDefaultAsync(u => u.NationalId == nationalId);
         }
     }
 }
