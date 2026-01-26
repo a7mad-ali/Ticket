@@ -2,6 +2,9 @@
 {
     public record UserPreCheckResponseDto(
         bool IsValid,
-        string? FullName
+        string? FullName,
+        string? Email,
+        string? DepartmentName,
+        string? Phone
     );
 }

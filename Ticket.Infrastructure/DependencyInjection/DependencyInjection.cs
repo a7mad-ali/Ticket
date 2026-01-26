@@ -20,8 +20,12 @@ namespace Ticket.Infrastructure.DependencyInjection
             services.AddDbContext<TicketDbContext>(options =>
                 options.UseSqlServer(
                     configuration.GetConnectionString("Default")));
+            services.AddDbContext<EmployeeDirectoryDbContext>(options =>
+                options.UseSqlServer(
+                    configuration.GetConnectionString("EmployeeDirectory")));
 
             // Repositories
+            services.AddScoped<IEmployeeDirectoryRepository, EmployeeDirectoryRepository>();
             services.AddScoped<ITicketRepository, TicketRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
 
