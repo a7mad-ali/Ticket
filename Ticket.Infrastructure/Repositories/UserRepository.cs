@@ -22,5 +22,10 @@ namespace Ticket.Infrastructure.Repositories
         {
             return await _context.users.FirstOrDefaultAsync(u => u.EmployeeCode == employeeCode);
         }
+
+        public async Task<User?> GetByNationalIdAsync(string nationalId)
+        {
+            return await _context.users.FirstOrDefaultAsync(u => u.NationalId == nationalId);
+        }
     }
 }

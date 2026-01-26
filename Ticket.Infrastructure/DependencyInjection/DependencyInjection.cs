@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Ticket.Domain.Contracts.Interfaces.IRepository;
+using Ticket.Domain.Contracts.Interfaces.IService;
 using Ticket.Infrastructure.Data;
 using Ticket.Infrastructure.Repositories;
 using Ticket.Infrastructure.Services;
@@ -25,8 +26,8 @@ namespace Ticket.Infrastructure.DependencyInjection
             services.AddScoped<IUserRepository, UserRepository>();
 
             // Services
-            services.AddScoped<TicketService>();
-            services.AddScoped<UserService>();
+            services.AddScoped<ITicketService, TicketService>();
+            services.AddScoped<IUserService, UserService>();
 
             // AutoMapper
             // Use only the assembly containing the mapping profiles to avoid ReflectionTypeLoadException
