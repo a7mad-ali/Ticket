@@ -10,11 +10,16 @@ namespace Ticket.Infrastructure.Services
 {
     public class UserService : IUserService
     {
+        private readonly IEmployeeDirectoryRepository _employeeDirectoryRepository;
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
 
-        public UserService(IUserRepository userRepository, IMapper mapper)
+        public UserService(
+            IEmployeeDirectoryRepository employeeDirectoryRepository,
+            IUserRepository userRepository,
+            IMapper mapper)
         {
+            _employeeDirectoryRepository = employeeDirectoryRepository;
             _userRepository = userRepository;
             _mapper = mapper;
         }
@@ -23,19 +28,41 @@ namespace Ticket.Infrastructure.Services
         {
             try
             {
+                var directoryByEmployeeCode = await _employeeDirectoryRepository
+                    .GetByEmployeeCodeAsync(dto.EmployeeCode);
+                var directoryByNationalId = await _employeeDirectoryRepository
+                    .GetByNationalIdAsync(dto.NationalId);
+
+                var directoryEntry = directoryByEmployeeCode ?? directoryByNationalId;
+                if (directoryEntry is null)
+                {
+                    return new UserPreCheckResponseDto(false, null, null, null, null);
+                }
+
+                if (!string.Equals(directoryEntry.EmployeeCode, dto.EmployeeCode, StringComparison.OrdinalIgnoreCase)
+                    || !string.Equals(directoryEntry.NationalId, dto.NationalId, StringComparison.OrdinalIgnoreCase))
+                {
+                    return new UserPreCheckResponseDto(false, null, null, null, null);
+                }
+
                 var byEmployeeCode = await _userRepository.GetByEmployeeCodeAsync(dto.EmployeeCode);
                 if (byEmployeeCode is not null)
                 {
-                    return new UserPreCheckResponseDto(false, byEmployeeCode.FullName);
+                    return new UserPreCheckResponseDto(false, byEmployeeCode.FullName, null, null, null);
                 }
 
                 var byNationalId = await _userRepository.GetByNationalIdAsync(dto.NationalId);
                 if (byNationalId is not null)
                 {
-                    return new UserPreCheckResponseDto(false, byNationalId.FullName);
+                    return new UserPreCheckResponseDto(false, byNationalId.FullName, null, null, null);
                 }
 
-                return new UserPreCheckResponseDto(true, null);
+                return new UserPreCheckResponseDto(
+                    true,
+                    directoryEntry.FullName,
+                    directoryEntry.Email,
+                    directoryEntry.DepartmentName,
+                    directoryEntry.Phone);
             }
             catch (Exception ex)
             {
@@ -47,6 +74,28 @@ namespace Ticket.Infrastructure.Services
         {
             try
             {
+                var directoryByEmployeeCode = await _employeeDirectoryRepository
+                    .GetByEmployeeCodeAsync(dto.EmployeeCode);
+                var directoryByNationalId = await _employeeDirectoryRepository
+                    .GetByNationalIdAsync(dto.NationalId);
+
+                var directoryEntry = directoryByEmployeeCode ?? directoryByNationalId;
+                if (directoryEntry is null)
+                {
+                    throw new InvalidOperationException("Employee record not found in directory.");
+                }
+
+                if (!string.Equals(directoryEntry.EmployeeCode, dto.EmployeeCode, StringComparison.OrdinalIgnoreCase)
+                    || !string.Equals(directoryEntry.NationalId, dto.NationalId, StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new InvalidOperationException("Employee record does not match provided identifiers.");
+                }
+
+                if (!string.Equals(directoryEntry.Email, dto.Email, StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new InvalidOperationException("Email does not match employee record.");
+                }
+
                 var existingEmail = await _userRepository.GetByEmailAsync(dto.Email);
                 if (existingEmail is not null)
                 {
