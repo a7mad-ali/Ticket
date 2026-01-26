@@ -5,21 +5,22 @@ using Ticket.Domain.Contracts.DTOs.Users;
 using Ticket.Domain.Contracts.Interfaces.IRepository;
 using Ticket.Domain.Contracts.Interfaces.IService;
 using Ticket.Domain.Entities;
+using Ticket.Infrastructure.Repositories;
 
 namespace Ticket.Infrastructure.Services
 {
     public class UserService : IUserService
     {
-        private readonly IEmployeeDirectoryRepository _employeeDirectoryRepository;
+        private readonly IEmployeeRepository _employeeRepository;
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
 
         public UserService(
-            IEmployeeDirectoryRepository employeeDirectoryRepository,
+            IEmployeeRepository employeeRepository,
             IUserRepository userRepository,
             IMapper mapper)
         {
-            _employeeDirectoryRepository = employeeDirectoryRepository;
+            _employeeRepository = employeeRepository;
             _userRepository = userRepository;
             _mapper = mapper;
         }
@@ -28,9 +29,9 @@ namespace Ticket.Infrastructure.Services
         {
             try
             {
-                var directoryByEmployeeCode = await _employeeDirectoryRepository
+                var directoryByEmployeeCode = await _employeeRepository
                     .GetByEmployeeCodeAsync(dto.EmployeeCode);
-                var directoryByNationalId = await _employeeDirectoryRepository
+                var directoryByNationalId = await _employeeRepository
                     .GetByNationalIdAsync(dto.NationalId);
 
                 var directoryEntry = directoryByEmployeeCode ?? directoryByNationalId;
@@ -74,9 +75,9 @@ namespace Ticket.Infrastructure.Services
         {
             try
             {
-                var directoryByEmployeeCode = await _employeeDirectoryRepository
+                var directoryByEmployeeCode = await _employeeRepository
                     .GetByEmployeeCodeAsync(dto.EmployeeCode);
-                var directoryByNationalId = await _employeeDirectoryRepository
+                var directoryByNationalId = await _employeeRepository
                     .GetByNationalIdAsync(dto.NationalId);
 
                 var directoryEntry = directoryByEmployeeCode ?? directoryByNationalId;
@@ -91,10 +92,7 @@ namespace Ticket.Infrastructure.Services
                     throw new InvalidOperationException("Employee record does not match provided identifiers.");
                 }
 
-                if (!string.Equals(directoryEntry.Email, dto.Email, StringComparison.OrdinalIgnoreCase))
-                {
-                    throw new InvalidOperationException("Email does not match employee record.");
-                }
+              
 
                 var existingEmail = await _userRepository.GetByEmailAsync(dto.Email);
                 if (existingEmail is not null)

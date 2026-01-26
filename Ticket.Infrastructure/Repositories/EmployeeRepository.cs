@@ -6,23 +6,23 @@ using Ticket.Infrastructure.Data;
 
 namespace Ticket.Infrastructure.Repositories
 {
-    public class EmployeeDirectoryRepository : IEmployeeDirectoryRepository
+    public class EmployeeRepository : IEmployeeRepository
     {
-        private readonly EmployeeDirectoryDbContext _context;
+        private readonly EmployeeDbContext _context;
 
-        public EmployeeDirectoryRepository(EmployeeDirectoryDbContext context)
+        public EmployeeRepository(EmployeeDbContext context)
         {
             _context = context;
         }
 
-        public Task<EmployeeDirectoryEntry?> GetByEmployeeCodeAsync(string employeeCode)
+        public Task<EmployeeEntry?> GetByEmployeeCodeAsync(string employeeCode)
         {
             return _context.EmployeeDirectoryEntries
                 .AsNoTracking()
                 .FirstOrDefaultAsync(entry => entry.EmployeeCode == employeeCode);
         }
 
-        public Task<EmployeeDirectoryEntry?> GetByNationalIdAsync(string nationalId)
+        public Task<EmployeeEntry?> GetByNationalIdAsync(string nationalId)
         {
             return _context.EmployeeDirectoryEntries
                 .AsNoTracking()
