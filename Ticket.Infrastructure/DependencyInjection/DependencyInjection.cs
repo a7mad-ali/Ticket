@@ -25,6 +25,23 @@ namespace Ticket.Infrastructure.DependencyInjection
                     configuration.GetConnectionString("EmployeeDirectory")));
 
             services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
+            services.PostConfigure<EmailOptions>(options =>
+            {
+                if (string.IsNullOrWhiteSpace(options.UserName))
+                {
+                    options.UserName = options.SenderEmail;
+                }
+
+                if (string.IsNullOrWhiteSpace(options.Password))
+                {
+                    options.Password = options.SenderPassword;
+                }
+
+                if (string.IsNullOrWhiteSpace(options.FromAddress))
+                {
+                    options.FromAddress = options.SenderEmail;
+                }
+            });
 
             // Repositories
             services.AddScoped<IEmployeeRepository, EmployeeRepository>();
