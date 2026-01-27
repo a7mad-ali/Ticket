@@ -4,16 +4,12 @@ namespace Ticket.Infrastructure.Services
     {
         public const string SectionName = "Email";
 
-        public string Host { get; set; } = string.Empty;
-        public int Port { get; set; } = 25;
-        public string UserName { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
-        public string FromAddress { get; set; } = string.Empty;
-        public string FromName { get; set; } = "Ticket Support";
-        public bool EnableSsl { get; set; } = true;
+        public string Host { get; set; } 
+        public int Port { get; set; } 
+       
+        public string SenderEmail { get; set; } 
+        public string SenderPassword { get; set; } 
+        public string AdminEmail { get; set; }
         public string VerificationBaseUrl { get; set; } = string.Empty;
-        public string SenderEmail { get; set; } = string.Empty;
-        public string SenderPassword { get; set; } = string.Empty;
-        public string AdminEmail { get; set; } = string.Empty;
     }
 }

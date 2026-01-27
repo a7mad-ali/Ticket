@@ -134,9 +134,10 @@ namespace Ticket.Infrastructure.Services
                 }
                 catch (Exception ex)
                 {
+                    Console.WriteLine(ex.ToString());
                     _userRepository.Remove(user);
                     await _userRepository.SaveChangesAsync();
-                    throw new InvalidOperationException("Unable to send verification email.", ex);
+                    throw new InvalidOperationException("Unable to send verification email.", ex.InnerException);
                 }
 
                 return new RegisterUserResponseDto(user.Id, user.Email);

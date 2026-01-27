@@ -27,19 +27,19 @@ namespace Ticket.Infrastructure.DependencyInjection
             services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
             services.PostConfigure<EmailOptions>(options =>
             {
-                if (string.IsNullOrWhiteSpace(options.UserName))
+                if (string.IsNullOrWhiteSpace(options.AdminEmail))
                 {
-                    options.UserName = options.SenderEmail;
+                    options.AdminEmail = options.SenderEmail;
                 }
 
-                if (string.IsNullOrWhiteSpace(options.Password))
+                if (string.IsNullOrWhiteSpace(options.SenderPassword))
                 {
-                    options.Password = options.SenderPassword;
+                    options.SenderPassword = options.SenderPassword;
                 }
 
-                if (string.IsNullOrWhiteSpace(options.FromAddress))
+                if (string.IsNullOrWhiteSpace(options.SenderEmail))
                 {
-                    options.FromAddress = options.SenderEmail;
+                    options.SenderEmail = options.SenderEmail;
                 }
             });
 

@@ -22,18 +22,18 @@ namespace Ticket.Infrastructure.Services
                 Subject = subject,
                 Body = htmlBody,
                 IsBodyHtml = true,
-                From = new MailAddress(_options.FromAddress, _options.FromName)
+                From = new MailAddress(_options.SenderEmail, _options.AdminEmail)
             };
 
             message.To.Add(new MailAddress(toEmail));
 
             using var client = new SmtpClient(_options.Host, _options.Port)
             {
-                EnableSsl = _options.EnableSsl,
-                Credentials = string.IsNullOrWhiteSpace(_options.UserName)
-                    ? CredentialCache.DefaultNetworkCredentials
-                    : new NetworkCredential(_options.UserName, _options.Password)
+               
+                UseDefaultCredentials = false,
+                Credentials = new NetworkCredential(_options.AdminEmail, _options.SenderPassword)
             };
+
 
             await client.SendMailAsync(message);
         }
