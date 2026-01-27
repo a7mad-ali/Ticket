@@ -49,7 +49,7 @@ namespace Ticket.Infrastructure.DependencyInjection
             services.AddScoped<IUserRepository, UserRepository>();
 
             // Services
-            services.AddScoped<IEmailSender, SmtpEmailSender>();
+            services.AddScoped<IEmailSender, MailKitEmailSender>();
             services.AddScoped<ITicketService, TicketService>();
             services.AddScoped<IUserService, UserService>();
 
