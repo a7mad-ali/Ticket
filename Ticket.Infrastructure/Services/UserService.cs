@@ -180,18 +180,28 @@ namespace Ticket.Infrastructure.Services
 
         private async Task SendVerificationEmailAsync(User user)
         {
-            if (string.IsNullOrWhiteSpace(_emailOptions.VerificationBaseUrl))
+            var verificationCode = user.EmailVerificationCode ?? string.Empty;
+            var verificationLink = string.Empty;
+            if (!string.IsNullOrWhiteSpace(_emailOptions.VerificationBaseUrl))
             {
-                return;
+                verificationLink =
+                    $"{_emailOptions.VerificationBaseUrl}?email={Uri.EscapeDataString(user.Email)}&code={Uri.EscapeDataString(verificationCode)}";
             }
 
-            var verificationLink =
-                $"{_emailOptions.VerificationBaseUrl}?email={Uri.EscapeDataString(user.Email)}&code={Uri.EscapeDataString(user.EmailVerificationCode ?? string.Empty)}";
             var subject = "Verify your email";
             var body = new StringBuilder()
-                .Append("<p>Please verify your email by clicking the link below:</p>")
-                .Append($"<p><a href=\"{verificationLink}\">Verify Email</a></p>")
-                .Append("<p>If you did not request this, please ignore this email.</p>")
+                .Append("<div style=\"font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:24px;border:1px solid #e5e7eb;border-radius:12px;\">")
+                .Append("<h2 style=\"color:#111827;margin:0 0 8px;\">Ticket Support</h2>")
+                .Append("<p style=\"color:#374151;margin:0 0 16px;\">Use the verification code below to finish creating your account.</p>")
+                .Append("<div style=\"background:#f3f4f6;border-radius:10px;padding:16px;text-align:center;margin:16px 0;\">")
+                .Append($"<span style=\"font-size:28px;letter-spacing:6px;font-weight:bold;color:#111827;\">{verificationCode}</span>")
+                .Append("</div>")
+                .Append("<p style=\"color:#6b7280;margin:0 0 16px;\">This code expires in 10 hours.</p>")
+                .Append(string.IsNullOrWhiteSpace(verificationLink)
+                    ? "<p style=\"color:#374151;margin:0 0 16px;\">Enter this code in the verification screen to activate your account.</p>"
+                    : $"<p style=\"margin:0 0 16px;\"><a style=\"display:inline-block;background:#2563eb;color:#ffffff;padding:10px 18px;border-radius:8px;text-decoration:none;\" href=\"{verificationLink}\">Verify Email</a></p>")
+                .Append("<p style=\"color:#9ca3af;margin:0;\">If you did not request this, please ignore this email.</p>")
+                .Append("</div>")
                 .ToString();
 
             await _emailSender.SendEmailAsync(user.Email, subject, body);
