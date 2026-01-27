@@ -128,7 +128,16 @@ namespace Ticket.Infrastructure.Services
                 await _userRepository.AddAsync(user);
                 await _userRepository.SaveChangesAsync();
 
-                await SendVerificationEmailAsync(user);
+                try
+                {
+                    await SendVerificationEmailAsync(user);
+                }
+                catch (Exception ex)
+                {
+                    _userRepository.Remove(user);
+                    await _userRepository.SaveChangesAsync();
+                    throw new InvalidOperationException("Unable to send verification email.", ex);
+                }
 
                 return new RegisterUserResponseDto(user.Id, user.Email);
             }
