@@ -12,5 +12,8 @@ namespace Ticket.Infrastructure.Services
         public string FromName { get; set; } = "Ticket Support";
         public bool EnableSsl { get; set; } = true;
         public string VerificationBaseUrl { get; set; } = string.Empty;
+        public string SenderEmail { get; set; } = string.Empty;
+        public string SenderPassword { get; set; } = string.Empty;
+        public string AdminEmail { get; set; } = string.Empty;
     }
 }
