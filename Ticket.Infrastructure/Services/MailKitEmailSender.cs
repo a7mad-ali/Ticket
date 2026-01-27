@@ -28,6 +28,8 @@ namespace Ticket.Infrastructure.Services
             }.ToMessageBody();
 
             using var client = new SmtpClient();
+            Console.WriteLine($">>> SMTP Host = '{_options.Host}', Port = {_options.Port}");
+
             await client.ConnectAsync(_options.Host, _options.Port, SecureSocketOptions.Auto);
             await client.AuthenticateAsync(_options.AdminEmail, _options.SenderPassword);
             await client.SendAsync(message);
