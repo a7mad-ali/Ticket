@@ -122,7 +122,7 @@ namespace Ticket.Infrastructure.Services
                 var user = _mapper.Map<User>(dto);
                 user.IsEmailVerified = false;
                 user.EmailVerificationCode = GenerateVerificationCode();
-                user.EmailVerificationCodeExpiresAtUtc = DateTime.UtcNow.AddHours(10);
+                user.EmailVerificationCodeExpiresAtUtc = DateTime.UtcNow.AddMinutes(10);
                 user.CreatedAtUtc = DateTime.UtcNow;
 
                 await _userRepository.AddAsync(user);
@@ -134,10 +134,9 @@ namespace Ticket.Infrastructure.Services
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.ToString());
                     _userRepository.Remove(user);
                     await _userRepository.SaveChangesAsync();
-                    throw new InvalidOperationException("Unable to send verification email.", ex.InnerException);
+                    throw new InvalidOperationException("Unable to send verification email.", ex);
                 }
 
                 return new RegisterUserResponseDto(user.Id, user.Email);

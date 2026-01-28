@@ -19,14 +19,14 @@ namespace Ticket.Infrastructure.Repositories
         {
             return _context.EmployeeDirectoryEntries
                 .AsNoTracking()
-                .FirstOrDefaultAsync(entry => entry.EmployeeCode == employeeCode);
+                .FirstOrDefaultAsync(E => E.EmployeeCode == employeeCode);
         }
 
         public Task<EmployeeEntry?> GetByNationalIdAsync(string nationalId)
         {
             return _context.EmployeeDirectoryEntries
                 .AsNoTracking()
-                .FirstOrDefaultAsync(entry => entry.NationalId == nationalId);
+                .FirstOrDefaultAsync(E => E.NationalId == nationalId);
         }
     }
 }
