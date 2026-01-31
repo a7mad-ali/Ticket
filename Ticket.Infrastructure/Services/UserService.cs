@@ -13,18 +13,15 @@ namespace Ticket.Infrastructure.Services
 {
     public class UserService : IUserService
     {
-        private readonly IEmployeeRepository _employeeRepository;
         private readonly IUserRepository _userRepository;
         private readonly IEmailSender _emailSender;
         private readonly EmailOptions _emailOptions;
 
         public UserService(
-            IEmployeeRepository employeeRepository,
             IUserRepository userRepository,
             IEmailSender emailSender,
             IOptions<EmailOptions> emailOptions)
         {
-            _employeeRepository = employeeRepository;
             _userRepository = userRepository;
             _emailSender = emailSender;
             _emailOptions = emailOptions.Value;
@@ -40,9 +37,9 @@ namespace Ticket.Infrastructure.Services
                     return new UserPreCheckResponseDto(false, null, null, null, null);
                 }
 
-                var directoryByEmployeeCode = await _employeeRepository
+                var directoryByEmployeeCode = await _userRepository
                     .GetByEmployeeCodeAsync(dto.EmployeeCode);
-                var directoryByNationalId = await _employeeRepository
+                var directoryByNationalId = await _userRepository
                     .GetByNationalIdAsync(dto.NationalId);
 
                 var directoryEntry = directoryByEmployeeCode ?? directoryByNationalId;
@@ -92,9 +89,9 @@ namespace Ticket.Infrastructure.Services
                     throw new InvalidOperationException("Employee code and national ID are required.");
                 }
 
-                var directoryByEmployeeCode = await _employeeRepository
+                var directoryByEmployeeCode = await _userRepository
                     .GetByEmployeeCodeAsync(dto.EmployeeCode);
-                var directoryByNationalId = await _employeeRepository
+                var directoryByNationalId = await _userRepository
                     .GetByNationalIdAsync(dto.NationalId);
 
                 var directoryEntry = directoryByEmployeeCode ?? directoryByNationalId;

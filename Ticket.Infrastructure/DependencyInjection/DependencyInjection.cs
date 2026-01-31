@@ -32,7 +32,6 @@ namespace Ticket.Infrastructure.DependencyInjection
             });
 
             // Repositories
-            services.AddScoped<IEmployeeRepository, EmployeeRepository>();
             services.AddScoped<ITicketRepository, TicketRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
 

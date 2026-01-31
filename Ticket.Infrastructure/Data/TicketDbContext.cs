@@ -13,7 +13,6 @@ namespace Ticket.Infrastructure.Data
         public DbSet<User> users { get; set; }
         public DbSet<TicketMessage> messages { get; set; }
         public DbSet<SupportTicket> Tickets { get; set; }
-        public DbSet<EmployeeEntry> EmployeeDirectoryEntries { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
