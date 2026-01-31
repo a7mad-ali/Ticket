@@ -31,7 +31,7 @@ namespace Ticket.Infrastructure.Services
             Console.WriteLine($">>> SMTP Host = '{_options.Host}', Port = {_options.Port}");
 
             await client.ConnectAsync(_options.Host, _options.Port, SecureSocketOptions.Auto);
-            await client.AuthenticateAsync(_options.AdminEmail, _options.SenderPassword);
+            await client.AuthenticateAsync(_options.SenderEmail, _options.SenderPassword);
             await client.SendAsync(message);
             await client.DisconnectAsync(true);
         }

@@ -3,9 +3,9 @@
 public record RegisterUserRequestDto(
     string EmployeeCode,
     string NationalId,
-    string FullName,
-    string Email,
-    string Phone,
-    string DepartmentName
+    string? FullName,
+    string? Email,
+    string? Phone,
+    string? DepartmentName
 );
 }

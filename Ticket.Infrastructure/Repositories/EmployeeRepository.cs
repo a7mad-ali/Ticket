@@ -8,9 +8,9 @@ namespace Ticket.Infrastructure.Repositories
 {
     public class EmployeeRepository : IEmployeeRepository
     {
-        private readonly EmployeeDbContext _context;
+        private readonly TicketDbContext _context;
 
-        public EmployeeRepository(EmployeeDbContext context)
+        public EmployeeRepository(TicketDbContext context)
         {
             _context = context;
         }

@@ -29,16 +29,6 @@ namespace Ticket.Infrastructure.DependencyInjection
                 {
                     options.AdminEmail = options.SenderEmail;
                 }
-
-                if (string.IsNullOrWhiteSpace(options.SenderPassword))
-                {
-                    options.SenderPassword = options.SenderPassword;
-                }
-
-                if (string.IsNullOrWhiteSpace(options.SenderEmail))
-                {
-                    options.SenderEmail = options.SenderEmail;
-                }
             });
 
             // Repositories

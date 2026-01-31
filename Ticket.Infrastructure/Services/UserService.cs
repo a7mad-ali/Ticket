@@ -1,4 +1,3 @@
-using AutoMapper;
 using System;
 using System.Security.Cryptography;
 using System.Text;
@@ -18,26 +17,29 @@ namespace Ticket.Infrastructure.Services
         private readonly IUserRepository _userRepository;
         private readonly IEmailSender _emailSender;
         private readonly EmailOptions _emailOptions;
-        private readonly IMapper _mapper;
 
         public UserService(
             IEmployeeRepository employeeRepository,
             IUserRepository userRepository,
             IEmailSender emailSender,
-            IOptions<EmailOptions> emailOptions,
-            IMapper mapper)
+            IOptions<EmailOptions> emailOptions)
         {
             _employeeRepository = employeeRepository;
             _userRepository = userRepository;
             _emailSender = emailSender;
             _emailOptions = emailOptions.Value;
-            _mapper = mapper;
         }
 
         public async Task<UserPreCheckResponseDto> PreCheckAsync(UserPreCheckRequestDto dto)
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(dto.EmployeeCode)
+                    || string.IsNullOrWhiteSpace(dto.NationalId))
+                {
+                    return new UserPreCheckResponseDto(false, null, null, null, null);
+                }
+
                 var directoryByEmployeeCode = await _employeeRepository
                     .GetByEmployeeCodeAsync(dto.EmployeeCode);
                 var directoryByNationalId = await _employeeRepository
@@ -84,6 +86,12 @@ namespace Ticket.Infrastructure.Services
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(dto.EmployeeCode)
+                    || string.IsNullOrWhiteSpace(dto.NationalId))
+                {
+                    throw new InvalidOperationException("Employee code and national ID are required.");
+                }
+
                 var directoryByEmployeeCode = await _employeeRepository
                     .GetByEmployeeCodeAsync(dto.EmployeeCode);
                 var directoryByNationalId = await _employeeRepository
@@ -101,7 +109,30 @@ namespace Ticket.Infrastructure.Services
                     throw new InvalidOperationException("Employee record does not match provided identifiers.");
                 }
 
-                var existingEmail = await _userRepository.GetByEmailAsync(dto.Email);
+                var resolvedFullName = string.IsNullOrWhiteSpace(dto.FullName)
+                    ? directoryEntry.FullName
+                    : dto.FullName;
+                var resolvedEmail = string.IsNullOrWhiteSpace(dto.Email)
+                    ? directoryEntry.Email
+                    : dto.Email;
+                var resolvedPhone = string.IsNullOrWhiteSpace(dto.Phone)
+                    ? directoryEntry.Phone
+                    : dto.Phone;
+                var resolvedDepartment = string.IsNullOrWhiteSpace(dto.DepartmentName)
+                    ? directoryEntry.DepartmentName
+                    : dto.DepartmentName;
+
+                if (string.IsNullOrWhiteSpace(resolvedFullName))
+                {
+                    throw new InvalidOperationException("Full name is required.");
+                }
+
+                if (string.IsNullOrWhiteSpace(resolvedEmail))
+                {
+                    throw new InvalidOperationException("Email is required.");
+                }
+
+                var existingEmail = await _userRepository.GetByEmailAsync(resolvedEmail);
                 if (existingEmail is not null)
                 {
                     throw new InvalidOperationException("Email already registered.");
@@ -119,7 +150,15 @@ namespace Ticket.Infrastructure.Services
                     throw new InvalidOperationException("National ID already registered.");
                 }
 
-                var user = _mapper.Map<User>(dto);
+                var user = new User
+                {
+                    EmployeeCode = dto.EmployeeCode,
+                    NationalId = dto.NationalId,
+                    FullName = resolvedFullName,
+                    Email = resolvedEmail,
+                    Phone = resolvedPhone ?? string.Empty,
+                    DepartmentName = resolvedDepartment ?? string.Empty
+                };
                 user.IsEmailVerified = false;
                 user.EmailVerificationCode = GenerateVerificationCode();
                 user.EmailVerificationCodeExpiresAtUtc = DateTime.UtcNow.AddMinutes(10);
