@@ -1,4 +1,3 @@
-using AutoMapper;
 using System;
 using System.Security.Cryptography;
 using System.Text;
@@ -8,49 +7,31 @@ using Ticket.Domain.Contracts.DTOs.Users;
 using Ticket.Domain.Contracts.Interfaces.IRepository;
 using Ticket.Domain.Contracts.Interfaces.IService;
 using Ticket.Domain.Entities;
-using Ticket.Infrastructure.Repositories;
 
 namespace Ticket.Infrastructure.Services
 {
     public class UserService : IUserService
     {
-        private readonly IEmployeeRepository _employeeRepository;
         private readonly IUserRepository _userRepository;
         private readonly IEmailSender _emailSender;
         private readonly EmailOptions _emailOptions;
-        private readonly IMapper _mapper;
 
         public UserService(
-            IEmployeeRepository employeeRepository,
             IUserRepository userRepository,
             IEmailSender emailSender,
-            IOptions<EmailOptions> emailOptions,
-            IMapper mapper)
+            IOptions<EmailOptions> emailOptions)
         {
-            _employeeRepository = employeeRepository;
             _userRepository = userRepository;
             _emailSender = emailSender;
             _emailOptions = emailOptions.Value;
-            _mapper = mapper;
         }
 
         public async Task<UserPreCheckResponseDto> PreCheckAsync(UserPreCheckRequestDto dto)
         {
             try
             {
-                var directoryByEmployeeCode = await _employeeRepository
-                    .GetByEmployeeCodeAsync(dto.EmployeeCode);
-                var directoryByNationalId = await _employeeRepository
-                    .GetByNationalIdAsync(dto.NationalId);
-
-                var directoryEntry = directoryByEmployeeCode ?? directoryByNationalId;
-                if (directoryEntry is null)
-                {
-                    return new UserPreCheckResponseDto(false, null, null, null, null);
-                }
-
-                if (!string.Equals(directoryEntry.EmployeeCode, dto.EmployeeCode, StringComparison.OrdinalIgnoreCase)
-                    || !string.Equals(directoryEntry.NationalId, dto.NationalId, StringComparison.OrdinalIgnoreCase))
+                if (string.IsNullOrWhiteSpace(dto.EmployeeCode)
+                    || string.IsNullOrWhiteSpace(dto.NationalId))
                 {
                     return new UserPreCheckResponseDto(false, null, null, null, null);
                 }
@@ -69,10 +50,10 @@ namespace Ticket.Infrastructure.Services
 
                 return new UserPreCheckResponseDto(
                     true,
-                    directoryEntry.FullName,
-                    directoryEntry.Email,
-                    directoryEntry.DepartmentName,
-                    directoryEntry.Phone);
+                    null,
+                    null,
+                    null,
+                    null);
             }
             catch (Exception ex)
             {
@@ -84,27 +65,19 @@ namespace Ticket.Infrastructure.Services
         {
             try
             {
-                var directoryByEmployeeCode = await _employeeRepository
-                    .GetByEmployeeCodeAsync(dto.EmployeeCode);
-                var directoryByNationalId = await _employeeRepository
-                    .GetByNationalIdAsync(dto.NationalId);
-
-                var directoryEntry = directoryByEmployeeCode ?? directoryByNationalId;
-                if (directoryEntry is null)
+                if (string.IsNullOrWhiteSpace(dto.EmployeeCode)
+                    || string.IsNullOrWhiteSpace(dto.NationalId))
                 {
-                    throw new InvalidOperationException("Employee record not found in directory.");
+                    throw new InvalidOperationException("Employee code and national ID are required.");
                 }
 
-                if (!string.Equals(directoryEntry.EmployeeCode, dto.EmployeeCode, StringComparison.OrdinalIgnoreCase)
-                    || !string.Equals(directoryEntry.NationalId, dto.NationalId, StringComparison.OrdinalIgnoreCase))
+                if (!string.IsNullOrWhiteSpace(dto.Email))
                 {
-                    throw new InvalidOperationException("Employee record does not match provided identifiers.");
-                }
-
-                var existingEmail = await _userRepository.GetByEmailAsync(dto.Email);
-                if (existingEmail is not null)
-                {
-                    throw new InvalidOperationException("Email already registered.");
+                    var existingEmail = await _userRepository.GetByEmailAsync(dto.Email);
+                    if (existingEmail is not null)
+                    {
+                        throw new InvalidOperationException("Email already registered.");
+                    }
                 }
 
                 var existingEmployee = await _userRepository.GetByEmployeeCodeAsync(dto.EmployeeCode);
@@ -119,10 +92,22 @@ namespace Ticket.Infrastructure.Services
                     throw new InvalidOperationException("National ID already registered.");
                 }
 
-                var user = _mapper.Map<User>(dto);
-                user.IsEmailVerified = false;
-                user.EmailVerificationCode = GenerateVerificationCode();
-                user.EmailVerificationCodeExpiresAtUtc = DateTime.UtcNow.AddMinutes(10);
+                var user = new User
+                {
+                    EmployeeCode = dto.EmployeeCode,
+                    NationalId = dto.NationalId,
+                    FullName = dto.FullName,
+                    Email = dto.Email,
+                    Phone = dto.Phone,
+                    DepartmentName = dto.DepartmentName
+                };
+                user.IsEmailVerified = string.IsNullOrWhiteSpace(user.Email);
+                user.EmailVerificationCode = string.IsNullOrWhiteSpace(user.Email)
+                    ? null
+                    : GenerateVerificationCode();
+                user.EmailVerificationCodeExpiresAtUtc = string.IsNullOrWhiteSpace(user.Email)
+                    ? null
+                    : DateTime.UtcNow.AddMinutes(10);
                 user.CreatedAtUtc = DateTime.UtcNow;
 
                 await _userRepository.AddAsync(user);
@@ -130,7 +115,10 @@ namespace Ticket.Infrastructure.Services
 
                 try
                 {
-                    await SendVerificationEmailAsync(user);
+                    if (!string.IsNullOrWhiteSpace(user.Email))
+                    {
+                        await SendVerificationEmailAsync(user);
+                    }
                 }
                 catch (Exception ex)
                 {
