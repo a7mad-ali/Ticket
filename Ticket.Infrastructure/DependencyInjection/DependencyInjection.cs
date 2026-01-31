@@ -20,9 +20,7 @@ namespace Ticket.Infrastructure.DependencyInjection
             services.AddDbContext<TicketDbContext>(options =>
                 options.UseSqlServer(
                     configuration.GetConnectionString("Default")));
-            services.AddDbContext<EmployeeDbContext>(options =>
-                options.UseSqlServer(
-                    configuration.GetConnectionString("EmployeeDirectory")));
+           
 
             services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
             services.PostConfigure<EmailOptions>(options =>
