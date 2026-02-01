@@ -13,6 +13,9 @@ namespace Ticket.Infrastructure.Data.Configurations
 
         public void Configure(EntityTypeBuilder<User> builder)
         {
+            builder.HasKey(x => x.Id);
+            builder.Property(x => x.Id).ValueGeneratedOnAdd();
+
             builder.HasIndex(x => x.EmployeeCode).IsUnique();
             builder.HasIndex(x => x.NationalId).IsUnique();
             builder.HasIndex(x => x.Email).IsUnique();

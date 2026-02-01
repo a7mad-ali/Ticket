@@ -1,7 +1,7 @@
 ﻿namespace Ticket.Domain.Contracts.DTOs.Users
 {
     public record RegisterUserResponseDto(
-     Guid UserId,
+     int UserId,
      string Email
  );
 }

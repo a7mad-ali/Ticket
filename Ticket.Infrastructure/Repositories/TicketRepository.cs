@@ -15,14 +15,14 @@ namespace Ticket.Infrastructure.Repositories
         {
         }
 
-        public async Task<SupportTicket?> GetTicketWithMessagesAsync(Guid ticketId)
+        public async Task<SupportTicket?> GetTicketWithMessagesAsync(int ticketId)
         {
             return await _context.Tickets
                 .Include(t => t.Messages)
                 .FirstOrDefaultAsync(t => t.Id == ticketId);
         }
 
-        public async Task<IReadOnlyList<SupportTicket>> GetTicketsByUserIdAsync(Guid userId)
+        public async Task<IReadOnlyList<SupportTicket>> GetTicketsByUserIdAsync(int userId)
         {
             return await _context.Tickets
                 .Include(t => t.Messages)

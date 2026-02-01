@@ -31,47 +31,30 @@ namespace Ticket.Infrastructure.Services
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(dto.EmployeeCode)
-                    || string.IsNullOrWhiteSpace(dto.NationalId))
+                var user = await _userRepository
+                    .GetByEmployeeCodeAndNationalIdAsync(dto.EmployeeCode, dto.NationalId);
+
+                if (user is null)
                 {
-                    return new UserPreCheckResponseDto(false, null, null, null, null);
+                    return new UserPreCheckResponseDto("notFound", null, null, null, null);
                 }
 
-                var directoryByEmployeeCode = await _userRepository
-                    .GetByEmployeeCodeAsync(dto.EmployeeCode);
-                var directoryByNationalId = await _userRepository
-                    .GetByNationalIdAsync(dto.NationalId);
+                var hasMissingDetails = string.IsNullOrWhiteSpace(user.FullName)
+                    || string.IsNullOrWhiteSpace(user.Email)
+                    || string.IsNullOrWhiteSpace(user.Phone)
+                    || string.IsNullOrWhiteSpace(user.DepartmentName);
 
-                var directoryEntry = directoryByEmployeeCode ?? directoryByNationalId;
-                if (directoryEntry is null)
+                if (hasMissingDetails)
                 {
-                    return new UserPreCheckResponseDto(false, null, null, null, null);
-                }
-
-                if (!string.Equals(directoryEntry.EmployeeCode, dto.EmployeeCode, StringComparison.OrdinalIgnoreCase)
-                    || !string.Equals(directoryEntry.NationalId, dto.NationalId, StringComparison.OrdinalIgnoreCase))
-                {
-                    return new UserPreCheckResponseDto(false, null, null, null, null);
-                }
-
-                var byEmployeeCode = await _userRepository.GetByEmployeeCodeAsync(dto.EmployeeCode);
-                if (byEmployeeCode is not null)
-                {
-                    return new UserPreCheckResponseDto(false, byEmployeeCode.FullName, null, null, null);
-                }
-
-                var byNationalId = await _userRepository.GetByNationalIdAsync(dto.NationalId);
-                if (byNationalId is not null)
-                {
-                    return new UserPreCheckResponseDto(false, byNationalId.FullName, null, null, null);
+                    return new UserPreCheckResponseDto("needsRegistration", null, null, null, null);
                 }
 
                 return new UserPreCheckResponseDto(
-                    true,
-                    directoryEntry.FullName,
-                    directoryEntry.Email,
-                    directoryEntry.DepartmentName,
-                    directoryEntry.Phone);
+                    "valid",
+                    user.FullName,
+                    user.Email,
+                    user.Phone,
+                    user.DepartmentName);
             }
             catch (Exception ex)
             {

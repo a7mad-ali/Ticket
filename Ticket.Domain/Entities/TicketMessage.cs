@@ -6,12 +6,12 @@ namespace Ticket.Domain.Entities
 {
     public  class TicketMessage
     {
-        public Guid Id { get; set; } = Guid.NewGuid();
+        public int Id { get; set; }
 
-        public Guid TicketId { get; set; }
+        public int TicketId { get; set; }
         public SupportTicket? Ticket { get; set; }
 
-        public Guid SenderUserId { get; set; }
+        public int SenderUserId { get; set; }
         public User? SenderUser { get; set; }
 
         public string Body { get; set; } = null!;
