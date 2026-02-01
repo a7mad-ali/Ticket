@@ -22,6 +22,8 @@ namespace Ticket.Infrastructure.Migrations
                     DepartmentName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Email = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     IsEmailVerified = table.Column<bool>(type: "bit", nullable: false),
+                    EmailVerificationCode = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
+                    EmailVerificationCodeExpiresAtUtc = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Phone = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
                     CreatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },

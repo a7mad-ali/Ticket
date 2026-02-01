@@ -12,8 +12,8 @@ using Ticket.Infrastructure.Data;
 namespace Ticket.Infrastructure.Migrations
 {
     [DbContext(typeof(TicketDbContext))]
-    [Migration("20260203121500_AddEmailVerificationToUsers")]
-    partial class AddEmailVerificationToUsers
+    [Migration("20260201095745_intialCreate")]
+    partial class intialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
