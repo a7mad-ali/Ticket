@@ -7,8 +7,8 @@ namespace Ticket.Domain.Contracts.Interfaces.IRepository
 {
     public  interface ITicketRepository:IBaseRepository<SupportTicket>
     {
-        Task<SupportTicket?> GetTicketWithMessagesAsync(Guid ticketId);
-        Task<IReadOnlyList<SupportTicket>> GetTicketsByUserIdAsync(Guid userId);
+        Task<SupportTicket?> GetTicketWithMessagesAsync(int ticketId);
+        Task<IReadOnlyList<SupportTicket>> GetTicketsByUserIdAsync(int userId);
 
     }
 }

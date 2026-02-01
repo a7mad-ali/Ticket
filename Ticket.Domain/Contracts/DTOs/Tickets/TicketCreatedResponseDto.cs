@@ -1,5 +1,5 @@
 ﻿namespace Ticket.Domain.Contracts.DTOs.Tickets
 {
-    public record TicketCreatedResponseDto(Guid TicketId);
+    public record TicketCreatedResponseDto(int TicketId);
 
 }

@@ -12,7 +12,7 @@ namespace Ticket.Domain.Contracts.Interfaces.IService
     {
         Task<TicketCreatedResponseDto> CreateTicketAsync(CreateTicketRequestDto dto);
         Task AddMessageAsync(AddMessageRequestDto dto);
-        Task<TicketDetailsDto> GetTicketAsync(Guid ticketId);
-        Task<IReadOnlyList<TicketDetailsDto>> GetMyTicketsAsync(Guid userId);
+        Task<TicketDetailsDto> GetTicketAsync(int ticketId);
+        Task<IReadOnlyList<TicketDetailsDto>> GetMyTicketsAsync(int userId);
     }
 }

@@ -1,8 +1,8 @@
 ﻿namespace Ticket.Domain.Contracts.DTOs.Tickets
 {
     public record TicketMessageDto(
-     Guid MessageId,
-     Guid SenderUserId,
+     int MessageId,
+     int SenderUserId,
      string Body,
      DateTime CreatedAtUtc
  );
