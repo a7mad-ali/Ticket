@@ -9,6 +9,17 @@ namespace Ticket.Presentation
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAngular",
+                    policy =>
+                    {
+                        policy
+                            .AllowAnyOrigin()
+                            .AllowAnyHeader()
+                            .AllowAnyMethod();
+                    });
+            });
 
             // Add services to the container.
             builder.Services.AddControllers();
@@ -28,6 +39,7 @@ namespace Ticket.Presentation
             }
 
             app.UseHttpsRedirection();
+            app.UseCors("AllowAngular");
 
             app.UseAuthorization();
 
