@@ -1,10 +1,10 @@
 ﻿namespace Ticket.Domain.Contracts.DTOs.Users
 {
     public record UserPreCheckResponseDto(
-        bool IsValid,
+        string Status,
         string? FullName,
         string? Email,
-        string? DepartmentName,
-        string? Phone
+        string? Phone,
+        string? DepartmentName
     );
 }

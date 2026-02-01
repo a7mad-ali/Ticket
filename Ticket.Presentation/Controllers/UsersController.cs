@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using System;
 using Ticket.Domain.Contracts.DTOs.Users;
 using Ticket.Domain.Contracts.Interfaces.IService;
 
@@ -18,6 +19,14 @@ namespace Ticket.Presentation.Controllers
         [HttpPost("precheck")]
         public async Task<ActionResult<UserPreCheckResponseDto>> PreCheck(UserPreCheckRequestDto dto)
         {
+            if (string.IsNullOrWhiteSpace(dto.EmployeeCode)
+                || string.IsNullOrWhiteSpace(dto.NationalId)
+                || string.Equals(dto.EmployeeCode, "0", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(dto.NationalId, "0", StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest(new { message = "Employee code and national ID are required and cannot be 0." });
+            }
+
             var result = await _userService.PreCheckAsync(dto);
             return Ok(result);
         }
