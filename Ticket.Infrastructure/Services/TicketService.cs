@@ -113,7 +113,7 @@ namespace Ticket.Infrastructure.Services
             }
         }
 
-        public async Task<IReadOnlyList<TicketDetailsDto>> GetMyTicketsAsync(Guid userId)
+        public async Task<IReadOnlyList<TicketDetailsDto>> GetMyTicketsAsync(int userId)
         {
             try
             {
@@ -126,7 +126,7 @@ namespace Ticket.Infrastructure.Services
             }
         }
 
-        public async Task<TicketDetailsDto> GetTicketAsync(Guid ticketId)
+        public async Task<TicketDetailsDto> GetTicketAsync(int ticketId)
         {
             try
             {

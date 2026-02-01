@@ -29,7 +29,7 @@ namespace Ticket.Presentation.Controllers
             }
         }
 
-        [HttpPost("{ticketId:guid}/messages")]
+        [HttpPost("{ticketId:int}/messages")]
         public async Task<ActionResult<TicketMessageDto>> AddMessage(AddMessageRequestDto dto)
         {
             try
@@ -47,8 +47,8 @@ namespace Ticket.Presentation.Controllers
             }
         }
 
-        [HttpGet("{ticketId:guid}")]
-        public async Task<ActionResult<TicketDetailsDto>> GetTicket(Guid ticketId)
+        [HttpGet("{ticketId:int}")]
+        public async Task<ActionResult<TicketDetailsDto>> GetTicket(int ticketId)
         {
             try
             {
@@ -61,8 +61,8 @@ namespace Ticket.Presentation.Controllers
             }
         }
 
-        [HttpGet("user/{userId:guid}")]
-        public async Task<ActionResult<IReadOnlyList<TicketDetailsDto>>> GetTicketsForUser(Guid userId)
+        [HttpGet("user/{userId:int}")]
+        public async Task<ActionResult<IReadOnlyList<TicketDetailsDto>>> GetTicketsForUser(int userId)
         {
             var tickets = await _ticketService.GetMyTicketsAsync(userId);
             return Ok(tickets);

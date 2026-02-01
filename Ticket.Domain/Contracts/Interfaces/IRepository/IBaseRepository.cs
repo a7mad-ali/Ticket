@@ -6,7 +6,7 @@ namespace Ticket.Domain.Contracts.Interfaces.IRepository
 {
     public  interface IBaseRepository<T> where T : class
     {
-       public Task <T?> GetByIdAsync(Guid id);
+       public Task <T?> GetByIdAsync(int id);
        public Task<IReadOnlyList<T>> GetAllAsync();
    
        public Task AddAsync(T entity);

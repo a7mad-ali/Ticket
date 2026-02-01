@@ -6,9 +6,9 @@ namespace Ticket.Domain.Entities
 {
     public  class SupportTicket
     {
-        public Guid Id { get; set; } = Guid.NewGuid();
+        public int Id { get; set; }
 
-        public Guid CreatedByUserId { get; set; }
+        public int CreatedByUserId { get; set; }
         public User? CreatedByUser { get; set; }
 
         public string Topic { get; set; } = null!;

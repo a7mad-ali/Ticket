@@ -11,6 +11,9 @@ namespace Ticket.Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<TicketMessage> builder)
         {
+            builder.HasKey(x => x.Id);
+            builder.Property(x => x.Id).ValueGeneratedOnAdd();
+
             builder.Property(x => x.Body).HasMaxLength(4000).IsRequired();
             builder.Property(x => x.CreatedAtUtc).IsRequired();
 
