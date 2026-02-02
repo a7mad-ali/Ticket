@@ -1,11 +1,8 @@
 ﻿namespace Ticket.Domain.Contracts.DTOs.Users
 {
     public record UserPreCheckResponseDto(
-        string Status,
+        string NextStep,
         int? UserId,
-        string? FullName,
-        string? Email,
-        string? Phone,
-        string? DepartmentName
+        string Message
     );
 }

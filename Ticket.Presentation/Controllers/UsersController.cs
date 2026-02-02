@@ -52,6 +52,20 @@ namespace Ticket.Presentation.Controllers
             }
         }
 
+        [HttpPost("{userId:int}/resend-email-code")]
+        public async Task<ActionResult<RegistrationUpdateResponseDto>> ResendEmailCode(int userId)
+        {
+            try
+            {
+                var response = await _userService.ResendVerificationEmailAsync(userId);
+                return Ok(response);
+            }
+            catch (ApiException ex)
+            {
+                return StatusCode(ex.StatusCode, new { code = ex.ErrorCode, message = ex.Message });
+            }
+        }
+
         [HttpPost("{userId:int}/verify-email")]
         public async Task<ActionResult<VerifyEmailResponseDto>> VerifyEmail(
             int userId,

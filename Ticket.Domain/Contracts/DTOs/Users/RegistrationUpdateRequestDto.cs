@@ -5,6 +5,6 @@
         string? Email,
         string? Phone,
         string? DepartmentName,
-        bool Resend
+        string Password
     );
 }
