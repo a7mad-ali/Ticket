@@ -155,7 +155,7 @@ namespace Ticket.Infrastructure.Services
                 {
                     await SendVerificationEmailAsync(existingUser);
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     throw new ApiException(400, "Unable to send verification email.");
                 }
@@ -166,7 +166,7 @@ namespace Ticket.Infrastructure.Services
             {
                 throw;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw new ApiException(400, "Unable to register user.");
             }
