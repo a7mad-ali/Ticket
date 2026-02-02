@@ -32,17 +32,19 @@ namespace Ticket.Presentation.Controllers
             return Ok(result);
         }
 
-        [HttpPost("register")]
-        public async Task<ActionResult<RegisterUserResponseDto>> Register(RegisterUserRequestDto dto)
+        [HttpPut("{userId:int}/registration")]
+        public async Task<ActionResult<RegistrationUpdateResponseDto>> CompleteRegistration(
+            int userId,
+            RegistrationUpdateRequestDto dto)
         {
             try
             {
-                var response = await _userService.RegisterAsync(dto);
+                var response = await _userService.CompleteRegistrationAsync(userId, dto);
                 return Ok(response);
             }
             catch (ApiException ex)
             {
-                return StatusCode(ex.StatusCode, new { message = ex.Message });
+                return StatusCode(ex.StatusCode, new { code = ex.ErrorCode, message = ex.Message });
             }
             catch (InvalidOperationException ex)
             {
@@ -50,16 +52,32 @@ namespace Ticket.Presentation.Controllers
             }
         }
 
-        [HttpPost("verify-email")]
-        public async Task<ActionResult<VerifyEmailResponseDto>> VerifyEmail(VerifyEmailRequestDto dto)
+        [HttpPost("{userId:int}/verify-email")]
+        public async Task<ActionResult<VerifyEmailResponseDto>> VerifyEmail(
+            int userId,
+            VerifyEmailRequestDto dto)
         {
-            var response = await _userService.VerifyEmailAsync(dto);
-            if (!response.Verified)
+            try
             {
-                return BadRequest(new { message = "Invalid or expired verification code." });
-            }
+                var response = await _userService.VerifyEmailAsync(userId, dto);
+                if (!response.Verified)
+                {
+                    var message = response.ErrorCode switch
+                    {
+                        "OTP_LOCKED" => "Verification is locked. Try again later.",
+                        "OTP_EXPIRED" => "Verification code has expired.",
+                        "OTP_INVALID" => "Invalid verification code.",
+                        _ => "Invalid or expired verification code."
+                    };
+                    return BadRequest(new { code = response.ErrorCode, message });
+                }
 
-            return Ok(response);
+                return Ok(response);
+            }
+            catch (ApiException ex)
+            {
+                return StatusCode(ex.StatusCode, new { code = ex.ErrorCode, message = ex.Message });
+            }
         }
     }
 }
