@@ -1,6 +1,10 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using Ticket.Infrastructure.Data;
 using Ticket.Infrastructure.DependencyInjection;
+using Ticket.Infrastructure.Services;
 
 namespace Ticket.Presentation
 {
@@ -25,6 +29,26 @@ namespace Ticket.Presentation
             builder.Services.AddControllers();
             builder.Services.AddApplicationDependencies(builder.Configuration);
 
+            var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>()
+                ?? new JwtOptions();
+            if (!string.IsNullOrWhiteSpace(jwtOptions.SigningKey))
+            {
+                builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                    .AddJwtBearer(options =>
+                    {
+                        options.TokenValidationParameters = new TokenValidationParameters
+                        {
+                            ValidateIssuer = !string.IsNullOrWhiteSpace(jwtOptions.Issuer),
+                            ValidateAudience = !string.IsNullOrWhiteSpace(jwtOptions.Audience),
+                            ValidateIssuerSigningKey = true,
+                            ValidIssuer = jwtOptions.Issuer,
+                            ValidAudience = jwtOptions.Audience,
+                            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SigningKey)),
+                            ClockSkew = TimeSpan.FromMinutes(1)
+                        };
+                    });
+            }
+
             // Use built-in OpenAPI support for .NET 10
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
@@ -41,6 +65,7 @@ namespace Ticket.Presentation
             app.UseHttpsRedirection();
             app.UseCors("AllowAngular");
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();

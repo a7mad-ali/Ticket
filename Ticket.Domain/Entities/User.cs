@@ -17,6 +17,7 @@ namespace Ticket.Domain.Entities
         public string? Email { get; set; }
         public bool IsEmailVerified { get; set; }
         public RegistrationStatus RegistrationStatus { get; set; } = RegistrationStatus.NotRegistered;
+        public string? PasswordHash { get; set; }
         public string? EmailVerificationCode { get; set; }
         public DateTime? EmailVerificationCodeExpiresAtUtc { get; set; }
         public int EmailVerificationAttempts { get; set; }
@@ -25,6 +26,9 @@ namespace Ticket.Domain.Entities
         public DateTime? LastResendAtUtc { get; set; }
 
         public string? Phone { get; set; }
+
+        public int FailedLoginAttempts { get; set; }
+        public DateTime? LoginLockedUntilUtc { get; set; }
 
         public DateTime CreatedAtUtc { get; set; }
     }

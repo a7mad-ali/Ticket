@@ -9,7 +9,9 @@ namespace Ticket.Domain.Contracts.Interfaces.IRepository
     {
         Task<User?> GetByEmailAsync(string email);
         Task<User?> GetByEmployeeCodeAsync(string employeeCode);
+        Task<User?> GetByEmployeeCodeOrEmailAsync(string employeeCodeOrEmail);
         Task<User?> GetByNationalIdAsync(string nationalId);
         Task<User?> GetByEmployeeCodeAndNationalIdAsync(string employeeCode, string nationalId);
+        Task<User?> GetByPhoneAsync(string phone);
     }
 }

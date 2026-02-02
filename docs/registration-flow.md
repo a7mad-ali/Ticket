@@ -1,9 +1,12 @@
-# Registration Flow Updates
+# Registration & Login Flow Updates
 
 ## Migration notes
 Add the following columns to the `Users` table:
 
-- `RegistrationStatus` (int, default 0 = NotRegistered)
+- `PasswordHash` (string, nullable)
+- `RegistrationStatus` (int, default 0 = NotRegistered; 1 = PendingEmailVerification; 2 = Verified)
+- `FailedLoginAttempts` (int, default 0)
+- `LoginLockedUntilUtc` (datetime, nullable)
 - `EmailVerificationCode` (string, nullable)
 - `EmailVerificationCodeExpiresAtUtc` (datetime, nullable)
 - `EmailVerificationAttempts` (int, default 0)
@@ -14,27 +17,30 @@ Add the following columns to the `Users` table:
 ## Example response payloads
 
 ### POST /api/users/precheck
-**Success (needsRegistration)**
+**Success (completeRegistration)**
 ```json
 {
-  "status": "needsRegistration",
+  "nextStep": "completeRegistration",
   "userId": 42,
-  "fullName": "Ada Lovelace",
-  "email": "ada@example.com",
-  "phone": "+1-555-0100",
-  "departmentName": "Engineering"
+  "message": "If the information matches our records, you can continue."
 }
 ```
 
-**Success (valid)**
+**Success (login)**
 ```json
 {
-  "status": "valid",
+  "nextStep": "login",
   "userId": 42,
-  "fullName": "Ada Lovelace",
-  "email": "ada@example.com",
-  "phone": "+1-555-0100",
-  "departmentName": "Engineering"
+  "message": "If the information matches our records, you can continue."
+}
+```
+
+**Success (notFound)**
+```json
+{
+  "nextStep": "notFound",
+  "userId": null,
+  "message": "If the information matches our records, you can continue."
 }
 ```
 
@@ -43,7 +49,26 @@ Add the following columns to the `Users` table:
 ```json
 {
   "userId": 42,
-  "status": "PendingVerification",
+  "status": "PendingEmailVerification",
+  "email": "ada@example.com",
+  "verificationExpiresAtUtc": "2024-06-01T12:45:00Z"
+}
+```
+
+**Error (email in use)**
+```json
+{
+  "code": "EMAIL_IN_USE",
+  "message": "Email already registered."
+}
+```
+
+### POST /api/users/{userId}/resend-email-code
+**Success**
+```json
+{
+  "userId": 42,
+  "status": "PendingEmailVerification",
   "email": "ada@example.com",
   "verificationExpiresAtUtc": "2024-06-01T12:45:00Z"
 }
@@ -71,5 +96,24 @@ Add the following columns to the `Users` table:
 {
   "code": "OTP_EXPIRED",
   "message": "Invalid or expired verification code."
+}
+```
+
+### POST /api/auth/login
+**Success**
+```json
+{
+  "accessToken": "<jwt>",
+  "expiresAtUtc": "2024-06-01T13:00:00Z",
+  "tokenType": "Bearer",
+  "refreshToken": null
+}
+```
+
+**Error (email not verified)**
+```json
+{
+  "code": "EMAIL_NOT_VERIFIED",
+  "message": "Email is not verified."
 }
 ```

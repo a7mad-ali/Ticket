@@ -1,8 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Ticket.Domain.Contracts.Interfaces.IRepository;
 using Ticket.Domain.Contracts.Interfaces.IService;
+using Ticket.Domain.Entities;
 using Ticket.Infrastructure.Data;
 using Ticket.Infrastructure.Repositories;
 using Ticket.Infrastructure.Services;
@@ -23,6 +25,7 @@ namespace Ticket.Infrastructure.DependencyInjection
            
 
             services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
+            services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
             services.PostConfigure<EmailOptions>(options =>
             {
                 if (string.IsNullOrWhiteSpace(options.AdminEmail))
@@ -36,7 +39,9 @@ namespace Ticket.Infrastructure.DependencyInjection
             services.AddScoped<IUserRepository, UserRepository>();
 
             // Services
+            services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
             services.AddScoped<IEmailSender, MailKitEmailSender>();
+            services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ITicketService, TicketService>();
             services.AddScoped<IUserService, UserService>();
 

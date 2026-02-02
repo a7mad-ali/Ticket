@@ -2,6 +2,7 @@ using System;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Ticket.Domain.Contracts.DTOs.Users;
 using Ticket.Domain.Contracts.Interfaces.IRepository;
@@ -16,15 +17,18 @@ namespace Ticket.Infrastructure.Services
         private readonly IUserRepository _userRepository;
         private readonly IEmailSender _emailSender;
         private readonly EmailOptions _emailOptions;
+        private readonly IPasswordHasher<User> _passwordHasher;
 
         public UserService(
             IUserRepository userRepository,
             IEmailSender emailSender,
-            IOptions<EmailOptions> emailOptions)
+            IOptions<EmailOptions> emailOptions,
+            IPasswordHasher<User> passwordHasher)
         {
             _userRepository = userRepository;
             _emailSender = emailSender;
             _emailOptions = emailOptions.Value;
+            _passwordHasher = passwordHasher;
         }
 
         public async Task<UserPreCheckResponseDto> PreCheckAsync(UserPreCheckRequestDto dto)
@@ -36,24 +40,18 @@ namespace Ticket.Infrastructure.Services
 
                 if (user is null)
                 {
-                    return new UserPreCheckResponseDto("notFound", null, null, null, null, null);
+                    return new UserPreCheckResponseDto(
+                        "notFound",
+                        null,
+                        "If the information matches our records, you can continue.");
                 }
 
-                var hasMissingDetails = string.IsNullOrWhiteSpace(user.FullName)
-                    || string.IsNullOrWhiteSpace(user.Email)
-                    || string.IsNullOrWhiteSpace(user.Phone)
-                    || string.IsNullOrWhiteSpace(user.DepartmentName);
-
-                var isVerified = user.IsEmailVerified || user.RegistrationStatus == RegistrationStatus.Verified;
-                var needsRegistration = hasMissingDetails || !isVerified;
+                var hasPassword = !string.IsNullOrWhiteSpace(user.PasswordHash);
 
                 return new UserPreCheckResponseDto(
-                    needsRegistration ? "needsRegistration" : "valid",
+                    hasPassword ? "login" : "completeRegistration",
                     user.Id,
-                    user.FullName,
-                    user.Email,
-                    user.Phone,
-                    user.DepartmentName);
+                    "If the information matches our records, you can continue.");
             }
             catch (Exception ex)
             {
@@ -80,8 +78,12 @@ namespace Ticket.Infrastructure.Services
                 }
 
                 var now = DateTime.UtcNow;
-                if (existingUser.RegistrationStatus == RegistrationStatus.Locked
-                    && existingUser.EmailVerificationLockedUntilUtc is not null
+                if (!string.IsNullOrWhiteSpace(existingUser.PasswordHash))
+                {
+                    throw new ApiException(409, "User already registered.", "ALREADY_REGISTERED");
+                }
+
+                if (existingUser.EmailVerificationLockedUntilUtc is not null
                     && existingUser.EmailVerificationLockedUntilUtc > now)
                 {
                     throw new ApiException(423, "Verification is locked. Try again later.", "OTP_LOCKED");
@@ -120,10 +122,23 @@ namespace Ticket.Infrastructure.Services
                     throw new ApiException(400, "Department name is required.", "DEPARTMENT_REQUIRED");
                 }
 
+                if (string.IsNullOrWhiteSpace(dto.Password))
+                {
+                    throw new ApiException(400, "Password is required.", "PASSWORD_REQUIRED");
+                }
+
                 var existingEmail = await _userRepository.GetByEmailAsync(resolvedEmail);
                 if (existingEmail is not null && existingEmail.Id != existingUser.Id)
                 {
                     throw new ApiException(409, "Email already registered.", "EMAIL_IN_USE");
+                }
+
+                var existingPhone = await _userRepository.GetByPhoneAsync(resolvedPhone);
+                if (!string.IsNullOrWhiteSpace(resolvedPhone)
+                    && existingPhone is not null
+                    && existingPhone.Id != existingUser.Id)
+                {
+                    throw new ApiException(409, "Phone already registered.", "PHONE_IN_USE");
                 }
 
                 existingUser.FullName = resolvedFullName;
@@ -131,50 +146,25 @@ namespace Ticket.Infrastructure.Services
                 existingUser.Phone = resolvedPhone ?? string.Empty;
                 existingUser.DepartmentName = resolvedDepartment ?? string.Empty;
                 existingUser.IsEmailVerified = false;
-                if (existingUser.RegistrationStatus == RegistrationStatus.Locked
-                    && existingUser.EmailVerificationLockedUntilUtc <= now)
-                {
-                    existingUser.EmailVerificationLockedUntilUtc = null;
-                    existingUser.EmailVerificationAttempts = 0;
-                    existingUser.RegistrationStatus = RegistrationStatus.PendingVerification;
-                }
-
-                var hasActiveCode = existingUser.RegistrationStatus == RegistrationStatus.PendingVerification
-                    && !string.IsNullOrWhiteSpace(existingUser.EmailVerificationCode)
-                    && existingUser.EmailVerificationCodeExpiresAtUtc > now;
-
-                if (!hasActiveCode || dto.Resend)
-                {
-                    if (dto.Resend)
-                    {
-                        EnforceResendLimits(existingUser, now);
-                    }
-                    else
-                    {
-                        existingUser.ResendCount = 0;
-                        existingUser.LastResendAtUtc = null;
-                    }
-
-                    existingUser.EmailVerificationCode = GenerateVerificationCode();
-                    existingUser.EmailVerificationCodeExpiresAtUtc = now.AddMinutes(10);
-                    existingUser.EmailVerificationAttempts = 0;
-                    existingUser.EmailVerificationLockedUntilUtc = null;
-                    existingUser.RegistrationStatus = RegistrationStatus.PendingVerification;
-                }
+                existingUser.PasswordHash = _passwordHasher.HashPassword(existingUser, dto.Password);
+                existingUser.ResendCount = 0;
+                existingUser.LastResendAtUtc = null;
+                existingUser.EmailVerificationCode = GenerateVerificationCode();
+                existingUser.EmailVerificationCodeExpiresAtUtc = now.AddMinutes(10);
+                existingUser.EmailVerificationAttempts = 0;
+                existingUser.EmailVerificationLockedUntilUtc = null;
+                existingUser.RegistrationStatus = RegistrationStatus.PendingEmailVerification;
 
                 _userRepository.Update(existingUser);
                 await _userRepository.SaveChangesAsync();
 
-                if (!hasActiveCode || dto.Resend)
+                try
                 {
-                    try
-                    {
-                        await SendVerificationEmailAsync(existingUser);
-                    }
-                    catch (Exception)
-                    {
-                        throw new ApiException(400, "Unable to send verification email.", "EMAIL_SEND_FAILED");
-                    }
+                    await SendVerificationEmailAsync(existingUser);
+                }
+                catch (Exception)
+                {
+                    throw new ApiException(400, "Unable to send verification email.", "EMAIL_SEND_FAILED");
                 }
 
                 return new RegistrationUpdateResponseDto(
@@ -216,10 +206,9 @@ namespace Ticket.Infrastructure.Services
                 }
 
                 var clearedLock = false;
-                if (user.RegistrationStatus == RegistrationStatus.Locked
+                if (user.EmailVerificationLockedUntilUtc is not null
                     && user.EmailVerificationLockedUntilUtc <= now)
                 {
-                    user.RegistrationStatus = RegistrationStatus.PendingVerification;
                     user.EmailVerificationAttempts = 0;
                     user.EmailVerificationLockedUntilUtc = null;
                     clearedLock = true;
@@ -242,7 +231,6 @@ namespace Ticket.Infrastructure.Services
                     user.EmailVerificationAttempts += 1;
                     if (user.EmailVerificationAttempts >= 5)
                     {
-                        user.RegistrationStatus = RegistrationStatus.Locked;
                         user.EmailVerificationLockedUntilUtc = now.AddMinutes(10);
                         _userRepository.Update(user);
                         await _userRepository.SaveChangesAsync();
@@ -268,6 +256,69 @@ namespace Ticket.Infrastructure.Services
             catch (Exception ex)
             {
                 throw new InvalidOperationException("Unable to verify email.", ex);
+            }
+        }
+
+        public async Task<RegistrationUpdateResponseDto> ResendVerificationEmailAsync(int userId)
+        {
+            try
+            {
+                var user = await _userRepository.GetByIdAsync(userId);
+                if (user is null)
+                {
+                    throw new ApiException(404, "User not found.", "USER_NOT_FOUND");
+                }
+
+                if (user.IsEmailVerified || user.RegistrationStatus == RegistrationStatus.Verified)
+                {
+                    throw new ApiException(409, "User already verified.", "ALREADY_VERIFIED");
+                }
+
+                if (string.IsNullOrWhiteSpace(user.PasswordHash))
+                {
+                    throw new ApiException(409, "Registration incomplete.", "REGISTRATION_REQUIRED");
+                }
+
+                var now = DateTime.UtcNow;
+                if (user.EmailVerificationLockedUntilUtc is not null
+                    && user.EmailVerificationLockedUntilUtc > now)
+                {
+                    throw new ApiException(423, "Verification is locked. Try again later.", "OTP_LOCKED");
+                }
+
+                EnforceResendLimits(user, now);
+
+                user.EmailVerificationCode = GenerateVerificationCode();
+                user.EmailVerificationCodeExpiresAtUtc = now.AddMinutes(10);
+                user.EmailVerificationAttempts = 0;
+                user.EmailVerificationLockedUntilUtc = null;
+                user.RegistrationStatus = RegistrationStatus.PendingEmailVerification;
+
+                _userRepository.Update(user);
+                await _userRepository.SaveChangesAsync();
+
+                try
+                {
+                    await SendVerificationEmailAsync(user);
+                }
+                catch (Exception)
+                {
+                    throw new ApiException(400, "Unable to send verification email.", "EMAIL_SEND_FAILED");
+                }
+
+                return new RegistrationUpdateResponseDto(
+                    user.Id,
+                    user.RegistrationStatus.ToString(),
+                    user.Email ?? string.Empty,
+                    user.EmailVerificationCodeExpiresAtUtc);
+            }
+            catch (ApiException)
+            {
+                throw;
+            }
+            catch (Exception)
+            {
+                throw new ApiException(400, "Unable to resend verification email.", "RESEND_FAILED");
             }
         }
 
