@@ -7,6 +7,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Hubs\**" />
+    <Compile Remove="wwwroot\**" />
+    <Content Remove="Hubs\**" />
+    <Content Remove="wwwroot\**" />
+    <EmbeddedResource Remove="Hubs\**" />
+    <EmbeddedResource Remove="wwwroot\**" />
+    <None Remove="Hubs\**" />
+    <None Remove="wwwroot\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.2">
@@ -19,11 +30,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Ticket.Domain\Ticket.Domain.csproj" />
     <ProjectReference Include="..\Ticket.Infrastructure\Ticket.Infrastructure.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Hubs\" />
-    <Folder Include="wwwroot\" />
   </ItemGroup>
 
 </Project>

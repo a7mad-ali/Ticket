@@ -104,7 +104,7 @@ namespace Ticket.Infrastructure.Services
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.SigningKey));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            expiresAtUtc = nowUtc.AddMinutes(_jwtOptions.AccessTokenMinutes);
+            expiresAtUtc = nowUtc.AddHours(_jwtOptions.AccessTokenHours);
 
             var token = new JwtSecurityToken(
                 issuer: _jwtOptions.Issuer,
