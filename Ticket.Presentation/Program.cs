@@ -5,6 +5,8 @@ using System.Text;
 using Ticket.Infrastructure.Data;
 using Ticket.Infrastructure.DependencyInjection;
 using Ticket.Infrastructure.Services;
+using Ticket.Domain.Contracts.Interfaces.IService;
+using Ticket.Presentation.RealTime;
 
 namespace Ticket.Presentation
 {
@@ -27,7 +29,9 @@ namespace Ticket.Presentation
 
             // Add services to the container.
             builder.Services.AddControllers();
+            builder.Services.AddSignalR();
             builder.Services.AddApplicationDependencies(builder.Configuration);
+            builder.Services.AddScoped<ITicketNotifier, TicketNotifier>();
 
             var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>()
                 ?? new JwtOptions();
@@ -69,6 +73,7 @@ namespace Ticket.Presentation
             app.UseAuthorization();
 
             app.MapControllers();
+            app.MapHub<TicketHub>("/hubs/tickets");
 
             app.Run();
         }

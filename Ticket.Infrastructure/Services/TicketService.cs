@@ -14,15 +14,21 @@ namespace Ticket.Infrastructure.Services
     {
         private readonly ITicketRepository _ticketRepository;
         private readonly IUserRepository _userRepository;
+        private readonly IDepartmentRepository _departmentRepository;
+        private readonly ITicketNotifier _ticketNotifier;
         private readonly IMapper _mapper;
 
         public TicketService(
             ITicketRepository ticketRepository,
             IUserRepository userRepository,
+            IDepartmentRepository departmentRepository,
+            ITicketNotifier ticketNotifier,
             IMapper mapper)
         {
             _ticketRepository = ticketRepository;
             _userRepository = userRepository;
+            _departmentRepository = departmentRepository;
+            _ticketNotifier = ticketNotifier;
             _mapper = mapper;
         }
 
@@ -42,18 +48,38 @@ namespace Ticket.Infrastructure.Services
                     throw new InvalidOperationException("Sender user not found.");
                 }
 
-                ticket.Messages.Add(new TicketMessage
+                var message = new TicketMessage
                 {
                     TicketId = ticket.Id,
                     SenderUserId = dto.SenderUserId,
                     Body = dto.Body,
-                    CreatedAtUtc = DateTime.UtcNow
-                });
+                    CreatedAtUtc = DateTime.UtcNow,
+                    Attachments = dto.Attachments?.Select(attachment => new TicketAttachment
+                    {
+                        TicketId = ticket.Id,
+                        UploadedByUserId = dto.SenderUserId,
+                        FileName = attachment.FileName,
+                        ContentType = attachment.ContentType,
+                        FileUrl = attachment.FileUrl,
+                        SizeInBytes = attachment.SizeInBytes,
+                        UploadedAtUtc = DateTime.UtcNow
+                    }).ToList() ?? new List<TicketAttachment>()
+                };
+
+                foreach (var attachment in message.Attachments)
+                {
+                    attachment.Message = message;
+                }
+
+                ticket.Messages.Add(message);
 
                 ticket.LastUpdatedAtUtc = DateTime.UtcNow;
 
                 _ticketRepository.Update(ticket);
                 await _ticketRepository.SaveChangesAsync();
+
+                var messageDto = _mapper.Map<TicketMessageDto>(message);
+                await _ticketNotifier.NotifyMessageAddedAsync(ticket.Id, messageDto);
             }
             catch (KeyNotFoundException)
             {
@@ -79,9 +105,31 @@ namespace Ticket.Infrastructure.Services
                     throw new InvalidOperationException("User not found.");
                 }
 
+                if (await _departmentRepository.GetByIdAsync(dto.DepartmentId) is null)
+                {
+                    throw new InvalidOperationException("Department not found.");
+                }
+
+                var firstMessage = new TicketMessage
+                {
+                    SenderUserId = dto.UserId,
+                    Body = dto.FirstMessage,
+                    CreatedAtUtc = DateTime.UtcNow,
+                    Attachments = dto.Attachments?.Select(attachment => new TicketAttachment
+                    {
+                        UploadedByUserId = dto.UserId,
+                        FileName = attachment.FileName,
+                        ContentType = attachment.ContentType,
+                        FileUrl = attachment.FileUrl,
+                        SizeInBytes = attachment.SizeInBytes,
+                        UploadedAtUtc = DateTime.UtcNow
+                    }).ToList() ?? new List<TicketAttachment>()
+                };
+
                 var ticket = new SupportTicket
                 {
                     CreatedByUserId = dto.UserId,
+                    DepartmentId = dto.DepartmentId,
                     Topic = dto.Topic,
                     Title = dto.Title,
                     Status = "Open",
@@ -89,17 +137,26 @@ namespace Ticket.Infrastructure.Services
                     LastUpdatedAtUtc = DateTime.UtcNow,
                     Messages = new List<TicketMessage>
                     {
-                        new TicketMessage
-                        {
-                            SenderUserId = dto.UserId,
-                            Body = dto.FirstMessage,
-                            CreatedAtUtc = DateTime.UtcNow
-                        }
+                        firstMessage
                     }
                 };
 
+                foreach (var attachment in firstMessage.Attachments)
+                {
+                    attachment.Ticket = ticket;
+                    attachment.Message = firstMessage;
+                }
+
                 await _ticketRepository.AddAsync(ticket);
                 await _ticketRepository.SaveChangesAsync();
+
+                var createdTicketNotification = new TicketCreatedNotificationDto(
+                    ticket.Id,
+                    ticket.DepartmentId,
+                    ticket.Topic,
+                    ticket.Title,
+                    ticket.CreatedAtUtc);
+                await _ticketNotifier.NotifyTicketCreatedAsync(createdTicketNotification);
 
                 return new TicketCreatedResponseDto(ticket.Id);
             }

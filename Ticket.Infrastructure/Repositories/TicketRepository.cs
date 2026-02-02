@@ -18,14 +18,18 @@ namespace Ticket.Infrastructure.Repositories
         public async Task<SupportTicket?> GetTicketWithMessagesAsync(int ticketId)
         {
             return await _context.Tickets
+                .Include(t => t.Department)
                 .Include(t => t.Messages)
+                .ThenInclude(m => m.Attachments)
                 .FirstOrDefaultAsync(t => t.Id == ticketId);
         }
 
         public async Task<IReadOnlyList<SupportTicket>> GetTicketsByUserIdAsync(int userId)
         {
             return await _context.Tickets
+                .Include(t => t.Department)
                 .Include(t => t.Messages)
+                .ThenInclude(m => m.Attachments)
                 .Where(t => t.CreatedByUserId == userId)
                 .ToListAsync();
         }

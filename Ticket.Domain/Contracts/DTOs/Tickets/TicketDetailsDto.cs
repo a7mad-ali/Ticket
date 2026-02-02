@@ -2,6 +2,8 @@
 {
     public record TicketDetailsDto(
      int TicketId,
+     int DepartmentId,
+     string DepartmentName,
      string Topic,
      string Title,
      string Status,

@@ -16,5 +16,7 @@ namespace Ticket.Domain.Entities
 
         public string Body { get; set; } = null!;
         public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
+
+        public List<TicketAttachment> Attachments { get; set; } = new();
     }
 }
