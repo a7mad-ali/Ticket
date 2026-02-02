@@ -7,7 +7,7 @@ using Ticket.Domain.Contracts.DTOs.Users;
 using Ticket.Domain.Contracts.Interfaces.IRepository;
 using Ticket.Domain.Contracts.Interfaces.IService;
 using Ticket.Domain.Entities;
-using Ticket.Infrastructure.Repositories;
+using Ticket.Domain.Exceptions;
 
 namespace Ticket.Infrastructure.Services
 {
@@ -69,104 +69,106 @@ namespace Ticket.Infrastructure.Services
                 if (string.IsNullOrWhiteSpace(dto.EmployeeCode)
                     || string.IsNullOrWhiteSpace(dto.NationalId))
                 {
-                    throw new InvalidOperationException("Employee code and national ID are required.");
+                    throw new ApiException(400, "Employee code and national ID are required.");
                 }
 
-                var directoryByEmployeeCode = await _userRepository
-                    .GetByEmployeeCodeAsync(dto.EmployeeCode);
-                var directoryByNationalId = await _userRepository
-                    .GetByNationalIdAsync(dto.NationalId);
+                var existingUser = await _userRepository
+                    .GetByEmployeeCodeAndNationalIdAsync(dto.EmployeeCode, dto.NationalId);
 
-                var directoryEntry = directoryByEmployeeCode ?? directoryByNationalId;
-                if (directoryEntry is null)
+                if (existingUser is null)
                 {
-                    throw new InvalidOperationException("Employee record not found in directory.");
-                }
-
-                if (!string.Equals(directoryEntry.EmployeeCode, dto.EmployeeCode, StringComparison.OrdinalIgnoreCase)
-                    || !string.Equals(directoryEntry.NationalId, dto.NationalId, StringComparison.OrdinalIgnoreCase))
-                {
-                    throw new InvalidOperationException("Employee record does not match provided identifiers.");
+                    throw new ApiException(404, "Employee record not found.");
                 }
 
                 var resolvedFullName = string.IsNullOrWhiteSpace(dto.FullName)
-                    ? directoryEntry.FullName
+                    ? existingUser.FullName
                     : dto.FullName;
                 var resolvedEmail = string.IsNullOrWhiteSpace(dto.Email)
-                    ? directoryEntry.Email
+                    ? existingUser.Email
                     : dto.Email;
                 var resolvedPhone = string.IsNullOrWhiteSpace(dto.Phone)
-                    ? directoryEntry.Phone
+                    ? existingUser.Phone
                     : dto.Phone;
                 var resolvedDepartment = string.IsNullOrWhiteSpace(dto.DepartmentName)
-                    ? directoryEntry.DepartmentName
+                    ? existingUser.DepartmentName
                     : dto.DepartmentName;
 
                 if (string.IsNullOrWhiteSpace(resolvedFullName))
                 {
-                    throw new InvalidOperationException("Full name is required.");
+                    throw new ApiException(400, "Full name is required.");
                 }
 
                 if (string.IsNullOrWhiteSpace(resolvedEmail))
                 {
-                    throw new InvalidOperationException("Email is required.");
+                    throw new ApiException(400, "Email is required.");
+                }
+
+                if (string.IsNullOrWhiteSpace(resolvedPhone))
+                {
+                    throw new ApiException(400, "Phone is required.");
+                }
+
+                if (string.IsNullOrWhiteSpace(resolvedDepartment))
+                {
+                    throw new ApiException(400, "Department name is required.");
+                }
+
+                var hasMissingDetails = string.IsNullOrWhiteSpace(existingUser.FullName)
+                    || string.IsNullOrWhiteSpace(existingUser.Email)
+                    || string.IsNullOrWhiteSpace(existingUser.Phone)
+                    || string.IsNullOrWhiteSpace(existingUser.DepartmentName);
+
+                if (!hasMissingDetails)
+                {
+                    throw new ApiException(409, "User already registered.");
                 }
 
                 var existingEmail = await _userRepository.GetByEmailAsync(resolvedEmail);
-                if (existingEmail is not null)
+                if (existingEmail is not null && existingEmail.Id != existingUser.Id)
                 {
-                    throw new InvalidOperationException("Email already registered.");
+                    throw new ApiException(409, "Email already registered.");
                 }
 
                 var existingEmployee = await _userRepository.GetByEmployeeCodeAsync(dto.EmployeeCode);
-                if (existingEmployee is not null)
+                if (existingEmployee is not null && existingEmployee.Id != existingUser.Id)
                 {
-                    throw new InvalidOperationException("Employee code already registered.");
+                    throw new ApiException(409, "Employee code already registered.");
                 }
 
                 var existingNationalId = await _userRepository.GetByNationalIdAsync(dto.NationalId);
-                if (existingNationalId is not null)
+                if (existingNationalId is not null && existingNationalId.Id != existingUser.Id)
                 {
-                    throw new InvalidOperationException("National ID already registered.");
+                    throw new ApiException(409, "National ID already registered.");
                 }
 
-                var user = new User
-                {
-                    EmployeeCode = dto.EmployeeCode,
-                    NationalId = dto.NationalId,
-                    FullName = resolvedFullName,
-                    Email = resolvedEmail,
-                    Phone = resolvedPhone ?? string.Empty,
-                    DepartmentName = resolvedDepartment ?? string.Empty
-                };
-                user.IsEmailVerified = false;
-                user.EmailVerificationCode = GenerateVerificationCode();
-                user.EmailVerificationCodeExpiresAtUtc = DateTime.UtcNow.AddMinutes(10);
-                user.CreatedAtUtc = DateTime.UtcNow;
-
-                await _userRepository.AddAsync(user);
+                existingUser.FullName = resolvedFullName;
+                existingUser.Email = resolvedEmail;
+                existingUser.Phone = resolvedPhone ?? string.Empty;
+                existingUser.DepartmentName = resolvedDepartment ?? string.Empty;
+                existingUser.IsEmailVerified = false;
+                existingUser.EmailVerificationCode = GenerateVerificationCode();
+                existingUser.EmailVerificationCodeExpiresAtUtc = DateTime.UtcNow.AddMinutes(10);
+                _userRepository.Update(existingUser);
                 await _userRepository.SaveChangesAsync();
 
                 try
                 {
-                    await SendVerificationEmailAsync(user);
+                    await SendVerificationEmailAsync(existingUser);
                 }
                 catch (Exception ex)
                 {
-                    _userRepository.Remove(user);
-                    await _userRepository.SaveChangesAsync();
-                    throw new InvalidOperationException("Unable to send verification email.", ex);
+                    throw new ApiException(400, "Unable to send verification email.");
                 }
 
-                return new RegisterUserResponseDto(user.Id, user.Email);
+                return new RegisterUserResponseDto(existingUser.Id, existingUser.Email);
             }
-            catch (InvalidOperationException)
+            catch (ApiException)
             {
                 throw;
             }
             catch (Exception ex)
             {
-                throw new InvalidOperationException("Unable to register user.", ex);
+                throw new ApiException(400, "Unable to register user.");
             }
         }
 

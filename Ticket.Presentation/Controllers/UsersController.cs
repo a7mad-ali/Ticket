@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using Ticket.Domain.Contracts.DTOs.Users;
 using Ticket.Domain.Contracts.Interfaces.IService;
+using Ticket.Domain.Exceptions;
 
 namespace Ticket.Presentation.Controllers
 {
@@ -38,6 +39,10 @@ namespace Ticket.Presentation.Controllers
             {
                 var response = await _userService.RegisterAsync(dto);
                 return Ok(response);
+            }
+            catch (ApiException ex)
+            {
+                return StatusCode(ex.StatusCode, new { message = ex.Message });
             }
             catch (InvalidOperationException ex)
             {
