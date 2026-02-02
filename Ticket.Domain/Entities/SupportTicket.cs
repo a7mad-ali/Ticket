@@ -11,6 +11,9 @@ namespace Ticket.Domain.Entities
         public int CreatedByUserId { get; set; }
         public User? CreatedByUser { get; set; }
 
+        public int DepartmentId { get; set; }
+        public Department? Department { get; set; }
+
         public string Topic { get; set; } = null!;
         public string Title { get; set; } = null!;
         public string Status { get; set; } = "Open";

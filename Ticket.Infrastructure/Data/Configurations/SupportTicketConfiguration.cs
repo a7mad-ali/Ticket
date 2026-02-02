@@ -21,6 +21,11 @@ namespace Ticket.Infrastructure.Data.Configurations
             builder.Property(x => x.CreatedAtUtc).IsRequired();
             builder.Property(x => x.LastUpdatedAtUtc).IsRequired();
 
+            builder.HasOne(x => x.Department)
+                   .WithMany(d => d.Tickets)
+                   .HasForeignKey(x => x.DepartmentId)
+                   .OnDelete(DeleteBehavior.Restrict);
+
             builder.HasOne(x => x.CreatedByUser)
                    .WithMany()
                    .HasForeignKey(x => x.CreatedByUserId)

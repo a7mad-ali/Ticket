@@ -3,6 +3,7 @@
     public record AddMessageRequestDto(
         int TicketId,
      int SenderUserId,
-     string Body
+     string Body,
+     List<TicketAttachmentRequestDto>? Attachments
  );
 }

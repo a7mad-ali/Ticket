@@ -37,6 +37,7 @@ namespace Ticket.Infrastructure.DependencyInjection
             // Repositories
             services.AddScoped<ITicketRepository, TicketRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IDepartmentRepository, DepartmentRepository>();
 
             // Services
             services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();

@@ -4,6 +4,7 @@
      int MessageId,
      int SenderUserId,
      string Body,
-     DateTime CreatedAtUtc
+     DateTime CreatedAtUtc,
+     List<TicketAttachmentDto> Attachments
  );
 }
