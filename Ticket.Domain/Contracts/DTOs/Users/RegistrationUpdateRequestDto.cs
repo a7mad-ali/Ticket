@@ -1,11 +1,10 @@
 ﻿namespace Ticket.Domain.Contracts.DTOs.Users
 {
-    public record UserPreCheckResponseDto(
-        string Status,
-        int? UserId,
+    public record RegistrationUpdateRequestDto(
         string? FullName,
         string? Email,
         string? Phone,
-        string? DepartmentName
+        string? DepartmentName,
+        bool Resend
     );
 }

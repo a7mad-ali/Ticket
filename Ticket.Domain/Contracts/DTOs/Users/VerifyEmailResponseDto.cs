@@ -1,6 +1,7 @@
 ﻿namespace Ticket.Domain.Contracts.DTOs.Users
 {
     public record VerifyEmailResponseDto(
-     bool Verified
- );
+        bool Verified,
+        string? ErrorCode
+    );
 }

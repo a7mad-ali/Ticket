@@ -9,6 +9,13 @@ namespace Ticket.Domain.Exceptions
             StatusCode = statusCode;
         }
 
+        public ApiException(int statusCode, string message, string? errorCode) : base(message)
+        {
+            StatusCode = statusCode;
+            ErrorCode = errorCode;
+        }
+
         public int StatusCode { get; }
+        public string? ErrorCode { get; }
     }
 }
